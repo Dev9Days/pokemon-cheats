@@ -1,22 +1,47 @@
-# pokemon-emerald-cheats
+# Pokemon Emerald Cheats
 
-포켓몬스터 에메랄드 영문판/한글패치 버전별 치트 정적 페이지.
+포켓몬스터 에메랄드 치트 코드를 버전별로 찾아보고 복사할 수 있는 웹 페이지입니다.
 
-## 목표
+## Link
 
-- 동일 UI에 버전별 데이터만 갈아끼우는 구조
+https://dev9days.github.io/pokemon-emerald-cheats/
+
+## Features
+
 - 영문판, 한글패치 20240611, 한글패치 20240611 모던폰트, 한글패치 20260613 지원
-- 선택 버전은 localStorage에 저장
-- 치트 검색, 코드 복사, GitHub Discussions 댓글 지원
+- 치트명, 코드, 비고 검색
+- 치트 코드 복사
+- `.gba` 파일 드래그 앤 드롭을 통한 ROM MD5 확인 및 버전 자동 선택
+- GitHub Discussions 기반 댓글 지원
 
-## 댓글 설정
+## Development
 
-댓글은 Giscus를 통해 GitHub Discussions에 저장합니다. `.env.example`을 기준으로 `.env.local` 또는 배포 환경변수를 설정하세요.
+```bash
+npm install
+npm run dev
+```
 
-- `VITE_GISCUS_REPO`: `Dev9Days/pokemon-emerald-cheats`
-- `VITE_GISCUS_REPO_ID`: GitHub 저장소 node ID
-- `VITE_GISCUS_BUG_CATEGORY`: 치트 오류 제보용 Discussion 카테고리명
-- `VITE_GISCUS_BUG_CATEGORY_ID`: 치트 오류 제보용 Discussion 카테고리 node ID
-- `VITE_GISCUS_REQUEST_CATEGORY`: 치트 요청용 Discussion 카테고리명
-- `VITE_GISCUS_REQUEST_CATEGORY_ID`: 치트 요청용 Discussion 카테고리 node ID
+## Build
 
+```bash
+npm run typecheck
+npm run validate:data
+npm run build
+```
+
+## Environment Variables
+
+댓글 기능은 Giscus를 사용합니다. 필요한 경우 `.env.example`을 참고해서 로컬 `.env.local` 또는 GitHub Actions variables에 값을 설정하세요.
+
+```txt
+VITE_GISCUS_REPO=
+VITE_GISCUS_REPO_ID=
+VITE_GISCUS_BUG_CATEGORY=
+VITE_GISCUS_BUG_CATEGORY_ID=
+VITE_GISCUS_REQUEST_CATEGORY=
+VITE_GISCUS_REQUEST_CATEGORY_ID=
+```
+
+## License
+
+Personal project.
