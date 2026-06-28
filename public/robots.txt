@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://dev9days.github.io/pokemon-emerald-cheats/sitemap.xml
