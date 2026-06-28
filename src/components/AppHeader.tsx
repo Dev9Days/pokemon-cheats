@@ -39,8 +39,11 @@ export function AppHeader({ build, builds, onSelectBuild, onSelectRomFile, romSt
           />
           <span>GBA 파일 선택</span>
         </label>
-        {build ? <p className="rom-drop-hint">.gba 파일을 끌어놓으면 MD5로 버전을 확인합니다.</p> : null}
-        {romStatus ? <p className="rom-status">{romStatus}</p> : null}
+        {romStatus ? (
+          <p className="rom-status">{romStatus}</p>
+        ) : build ? (
+          <p className="rom-drop-hint">.gba 파일을 끌어놓으면 MD5로 버전을 확인합니다.</p>
+        ) : null}
       </div>
     </header>
   );
