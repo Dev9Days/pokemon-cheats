@@ -4,7 +4,7 @@
 
 ## Website
 
-[포켓몬스터 에메랄드 치트 코드 모음](https://dev9days.github.io/pokemon-emerald-cheats/)
+[포켓몬스터 에메랄드 치트 코드 모음](https://pokemon.9days.dev/emerald/cheats)
 
 ## Features
 
