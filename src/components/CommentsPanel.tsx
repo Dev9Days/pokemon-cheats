@@ -6,7 +6,7 @@ const baseGiscusConfig = {
   repoId: process.env.NEXT_PUBLIC_GISCUS_REPO_ID,
 };
 
-const GISCUS_DISCUSSION_TERM = "pokemon-emerald-cheats";
+const GISCUS_DISCUSSION_TERM = "pokemon-cheats";
 
 const giscusCategories = [
   {

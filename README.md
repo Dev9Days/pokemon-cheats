@@ -1,4 +1,4 @@
-# Pokemon Emerald Cheats
+# Pokemon Cheats
 
 포켓몬스터 에메랄드 치트 코드를 버전별로 찾아보고 복사할 수 있는 웹 페이지입니다.
 
