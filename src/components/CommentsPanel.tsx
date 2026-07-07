@@ -2,37 +2,54 @@ import { MessageCircle, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 const baseGiscusConfig = {
-  repo: import.meta.env.VITE_GISCUS_REPO,
-  repoId: import.meta.env.VITE_GISCUS_REPO_ID,
+  repo: process.env.NEXT_PUBLIC_GISCUS_REPO,
+  repoId: process.env.NEXT_PUBLIC_GISCUS_REPO_ID,
 };
 
 const giscusCategories = [
   {
     id: "bug",
     label: "안 돼요",
-    category: import.meta.env.VITE_GISCUS_BUG_CATEGORY,
-    categoryId: import.meta.env.VITE_GISCUS_BUG_CATEGORY_ID,
+    category: process.env.NEXT_PUBLIC_GISCUS_BUG_CATEGORY,
+    categoryId: process.env.NEXT_PUBLIC_GISCUS_BUG_CATEGORY_ID,
   },
   {
     id: "request",
     label: "만들어주세요",
-    category: import.meta.env.VITE_GISCUS_REQUEST_CATEGORY,
-    categoryId: import.meta.env.VITE_GISCUS_REQUEST_CATEGORY_ID,
+    category: process.env.NEXT_PUBLIC_GISCUS_REQUEST_CATEGORY,
+    categoryId: process.env.NEXT_PUBLIC_GISCUS_REQUEST_CATEGORY_ID,
   },
 ] as const;
 
 type GiscusCategory = (typeof giscusCategories)[number];
+type ConfiguredGiscusCategory = GiscusCategory & {
+  category: string;
+  categoryId: string;
+};
+
+function isConfiguredGiscusCategory(category: GiscusCategory): category is ConfiguredGiscusCategory {
+  return Boolean(category.category && category.categoryId);
+}
+
+function getConfiguredGiscusBase() {
+  if (!baseGiscusConfig.repo || !baseGiscusConfig.repoId) return null;
+  return {
+    repo: baseGiscusConfig.repo,
+    repoId: baseGiscusConfig.repoId,
+  };
+}
 
 export function CommentsPanel({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const [selectedCategoryId, setSelectedCategoryId] = useState<GiscusCategory["id"]>("bug");
   const giscusContainerRef = useRef<HTMLDivElement | null>(null);
   const configuredCategories = useMemo(
-    () => giscusCategories.filter((category) => category.category && category.categoryId),
+    () => giscusCategories.filter(isConfiguredGiscusCategory),
     [],
   );
   const selectedCategory =
     configuredCategories.find((category) => category.id === selectedCategoryId) ?? configuredCategories[0] ?? null;
-  const isGiscusConfigured = Boolean(baseGiscusConfig.repo && baseGiscusConfig.repoId && selectedCategory);
+  const configuredBase = getConfiguredGiscusBase();
+  const isGiscusConfigured = Boolean(configuredBase && selectedCategory);
 
   useEffect(() => {
     if (!isOpen || !isGiscusConfigured || !giscusContainerRef.current || !selectedCategory) return;
@@ -42,8 +59,10 @@ export function CommentsPanel({ isOpen, onClose }: { isOpen: boolean; onClose: (
     script.src = "https://giscus.app/client.js";
     script.async = true;
     script.crossOrigin = "anonymous";
-    script.setAttribute("data-repo", baseGiscusConfig.repo);
-    script.setAttribute("data-repo-id", baseGiscusConfig.repoId);
+    if (!configuredBase) return;
+
+    script.setAttribute("data-repo", configuredBase.repo);
+    script.setAttribute("data-repo-id", configuredBase.repoId);
     script.setAttribute("data-category", selectedCategory.category);
     script.setAttribute("data-category-id", selectedCategory.categoryId);
     script.setAttribute("data-mapping", "pathname");
@@ -54,7 +73,7 @@ export function CommentsPanel({ isOpen, onClose }: { isOpen: boolean; onClose: (
     script.setAttribute("data-theme", "light");
     script.setAttribute("data-lang", "ko");
     giscusContainerRef.current.append(script);
-  }, [isOpen, isGiscusConfigured, selectedCategory]);
+  }, [configuredBase, isOpen, isGiscusConfigured, selectedCategory]);
 
   if (!isOpen) return null;
 
@@ -93,12 +112,12 @@ export function CommentsPanel({ isOpen, onClose }: { isOpen: boolean; onClose: (
           <div className="comments-panel__empty">
             <strong>댓글 설정 필요</strong>
             <p>GitHub Discussions와 Giscus 설정값을 환경변수로 추가하면 댓글을 사용할 수 있습니다.</p>
-            <code>VITE_GISCUS_REPO</code>
-            <code>VITE_GISCUS_REPO_ID</code>
-            <code>VITE_GISCUS_BUG_CATEGORY</code>
-            <code>VITE_GISCUS_BUG_CATEGORY_ID</code>
-            <code>VITE_GISCUS_REQUEST_CATEGORY</code>
-            <code>VITE_GISCUS_REQUEST_CATEGORY_ID</code>
+            <code>NEXT_PUBLIC_GISCUS_REPO</code>
+            <code>NEXT_PUBLIC_GISCUS_REPO_ID</code>
+            <code>NEXT_PUBLIC_GISCUS_BUG_CATEGORY</code>
+            <code>NEXT_PUBLIC_GISCUS_BUG_CATEGORY_ID</code>
+            <code>NEXT_PUBLIC_GISCUS_REQUEST_CATEGORY</code>
+            <code>NEXT_PUBLIC_GISCUS_REQUEST_CATEGORY_ID</code>
           </div>
         )}
       </div>
