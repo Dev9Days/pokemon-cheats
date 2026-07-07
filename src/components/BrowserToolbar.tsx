@@ -11,6 +11,7 @@ type BrowserToolbarProps = {
   onOpenNavigation: () => void;
   onSearchBlur: () => void;
   onSearchFocus: () => void;
+  onSearchPointerDown: () => void;
   onSearch: (query: string) => void;
   query: string;
   toolbarRef: RefObject<HTMLDivElement | null>;
@@ -25,6 +26,7 @@ export function BrowserToolbar({
   onOpenNavigation,
   onSearchBlur,
   onSearchFocus,
+  onSearchPointerDown,
   onSearch,
   query,
   toolbarRef,
@@ -48,6 +50,7 @@ export function BrowserToolbar({
             query={query}
             onBlur={onSearchBlur}
             onFocus={onSearchFocus}
+            onPointerDown={onSearchPointerDown}
             onSearch={onSearch}
           />
           <button className="mobile-comment-button" type="button" onClick={onOpenComments} aria-label="댓글 열기">

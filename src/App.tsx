@@ -1,16 +1,12 @@
+"use client";
+
 import type { CSSProperties } from "react";
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { AppHeader } from "./components/AppHeader";
 import { BuildLoadingOverlay } from "./components/BuildLoadingOverlay";
-import { BrowserToolbar } from "./components/BrowserToolbar";
 import { BuildSelector } from "./components/BuildSelector";
-import { CommentsButton } from "./components/CommentsButton";
-import { CommentsPanel } from "./components/CommentsPanel";
-import { MobileSectionOverlay } from "./components/MobileSectionOverlay";
-import { ProgressiveCheatGroupList } from "./components/ProgressiveCheatGroupList";
+import { CheatBrowser } from "./components/CheatBrowser";
 import { RomDropOverlay } from "./components/RomDropOverlay";
-import { SearchResultsLayer } from "./components/SearchResultsLayer";
-import { SectionNav } from "./components/SectionNav";
 import { Toast } from "./components/Toast";
 import { builds } from "./data/builds";
 import {
@@ -19,14 +15,23 @@ import {
   getVariantCodesForBuild,
   preloadCheatStructure,
 } from "./data";
+import { useActiveSection } from "./hooks/useActiveSection";
 import { useBodyScrollLock } from "./hooks/useBodyScrollLock";
 import { useSubmittedSearch } from "./hooks/useSubmittedSearch";
 import type { CheatBuildId, CheatGroup } from "./types/cheat";
+import {
+  getBuildRoute,
+  getInitialBuild,
+  safeRemoveStoredBuild,
+  safeSetStoredBuild,
+  type HydrationAwareWindow,
+} from "./utils/buildSelection";
 import { filterGroups, getSectionNavItems } from "./utils/cheats";
-import { isProgrammaticSectionScroll, scrollToSection } from "./utils/sectionScroll";
+import { installCloudflareAnalytics } from "./utils/cloudflareAnalytics";
+import { normalizeAppRoute } from "./utils/routing";
 
-const STORAGE_KEY = "pokemon-emerald-cheats:selected-build";
 const BUILD_LOADING_OVERLAY_DELAY_MS = 150;
+const BUILD_LOADING_OVERLAY_MIN_VISIBLE_MS = 1200;
 const SEARCH_RESULTS_CLEANUP_DELAY_MS = 180;
 
 type NetworkInformationLike = {
@@ -34,18 +39,20 @@ type NetworkInformationLike = {
   saveData?: boolean;
 };
 
-function getInitialBuild(): CheatBuildId | null {
-  const saved = localStorage.getItem(STORAGE_KEY) as CheatBuildId | null;
-  return saved && builds.some((build) => build.id === saved) ? saved : null;
-}
-
-export function App() {
-  const initialBuildRef = useRef<CheatBuildId | null>(getInitialBuild());
-  const [selectedBuild, setSelectedBuild] = useState<CheatBuildId | null>(initialBuildRef.current);
-  const [groups, setGroups] = useState<CheatGroup[]>([]);
-  const [warmedBuildId, setWarmedBuildId] = useState<CheatBuildId | null>(null);
-  const [warmedGroups, setWarmedGroups] = useState<CheatGroup[]>([]);
-  const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
+export function App({
+  initialBuild = null,
+  initialGroups = [],
+}: {
+  initialBuild?: CheatBuildId | null;
+  initialGroups?: CheatGroup[];
+}) {
+  const initialBuildRef = useRef<CheatBuildId | null>(null);
+  const [selectedBuild, setSelectedBuild] = useState<CheatBuildId | null>(initialBuild);
+  const [groups, setGroups] = useState<CheatGroup[]>(initialBuild ? initialGroups : []);
+  const [warmedBuildId, setWarmedBuildId] = useState<CheatBuildId | null>(
+    !initialBuild && initialGroups.length > 0 ? builds[0].id : null,
+  );
+  const [warmedGroups, setWarmedGroups] = useState<CheatGroup[]>(initialBuild ? [] : initialGroups);
   const [isMobileOverlayOpen, setIsMobileOverlayOpen] = useState(false);
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
   const [isBuildPending, setIsBuildPending] = useState(false);
@@ -55,16 +62,22 @@ export function App() {
   const [isMobileSearchFocused, setIsMobileSearchFocused] = useState(false);
   const [isRomDragging, setIsRomDragging] = useState(false);
   const [romStatus, setRomStatus] = useState<string | null>(null);
+  const [searchLockScrollY, setSearchLockScrollY] = useState<number | null>(null);
   const [toolbarHeight, setToolbarHeight] = useState(0);
   const buildLoadTokenRef = useRef(0);
   const pendingBuildRenderTokenRef = useRef<number | null>(null);
-  const currentBuildIdRef = useRef<CheatBuildId | null>(null);
+  const currentBuildIdRef = useRef<CheatBuildId | null>(initialBuild);
   const dragDepthRef = useRef(0);
   const isBuildLoadingActiveRef = useRef(false);
+  const buildLoadingShownAtRef = useRef(0);
   const loadingOverlayTimerRef = useRef<number | null>(null);
   const warmRenderTokenRef = useRef(0);
   const toolbarRef = useRef<HTMLDivElement | null>(null);
   const warmToolbarRef = useRef<HTMLDivElement | null>(null);
+  const isMobileSearchFocusedRef = useRef(false);
+  const lastUnlockedScrollYRef = useRef(0);
+  const mobileSearchFocusScrollYRef = useRef(0);
+  const unlockedScrollHistoryRef = useRef<{ time: number; y: number }[]>([]);
   const {
     hasFilterQuery,
     isSearchActive,
@@ -83,6 +96,7 @@ export function App() {
   ]);
   const sectionNavItems = useMemo(() => getSectionNavItems(groups), [groups]);
   const warmedSectionNavItems = useMemo(() => getSectionNavItems(warmedGroups), [warmedGroups]);
+  const { activeSectionId, navigateToSection: scrollToActiveSection } = useActiveSection(sectionNavItems);
   const activeSectionTitle =
     sectionNavItems.find((item) => item.id === activeSectionId)?.title ?? sectionNavItems[0]?.title ?? "분류";
 
@@ -99,56 +113,53 @@ export function App() {
   }, []);
 
   useEffect(() => {
-    setActiveSectionId(sectionNavItems[0]?.id ?? null);
-  }, [sectionNavItems]);
-
-  useEffect(() => {
-    const initialBuild = initialBuildRef.current;
-    initialBuildRef.current = null;
-    if (initialBuild) void loadBuild(initialBuild, { persist: false, resetView: false, showOverlay: false });
+    (window as HydrationAwareWindow).__pokemonEmeraldCheatsHydrated = true;
+    normalizeAppRoute();
+    installCloudflareAnalytics();
   }, []);
 
   useEffect(() => {
-    if (sectionNavItems.length === 0) return;
+    if (initialBuild) {
+      safeSetStoredBuild(initialBuild);
+      return;
+    }
 
+    initialBuildRef.current = getInitialBuild();
+    const storedInitialBuild = initialBuildRef.current;
+    initialBuildRef.current = null;
+    if (storedInitialBuild) {
+      window.location.replace(getBuildRoute(storedInitialBuild));
+    }
+  }, []);
+
+  useEffect(() => {
     let frameId = 0;
 
-    function updateActiveSection() {
-      frameId = 0;
-      if (isProgrammaticSectionScroll()) return;
+    function updateLastUnlockedScrollY() {
+      if (isSearchActive) return;
 
-      const anchorTop = 96;
-      let nextActive = sectionNavItems[0]?.id ?? null;
-
-      for (const item of sectionNavItems) {
-        const element = document.getElementById(item.id);
-        if (!element) continue;
-
-        if (element.getBoundingClientRect().top <= anchorTop) {
-          nextActive = item.id;
-        } else {
-          break;
-        }
-      }
-
-      setActiveSectionId((currentId) => (currentId === nextActive ? currentId : nextActive));
+      const now = window.performance.now();
+      lastUnlockedScrollYRef.current = window.scrollY;
+      unlockedScrollHistoryRef.current = [
+        ...unlockedScrollHistoryRef.current.filter((item) => now - item.time <= 1000),
+        { time: now, y: window.scrollY },
+      ];
     }
 
-    function requestUpdate() {
-      if (frameId) return;
-      frameId = window.requestAnimationFrame(updateActiveSection);
+    function trackLastUnlockedScrollY() {
+      updateLastUnlockedScrollY();
+      frameId = window.requestAnimationFrame(trackLastUnlockedScrollY);
     }
 
-    updateActiveSection();
-    window.addEventListener("scroll", requestUpdate, { passive: true });
-    window.addEventListener("resize", requestUpdate);
+    updateLastUnlockedScrollY();
+    frameId = window.requestAnimationFrame(trackLastUnlockedScrollY);
+    window.addEventListener("scroll", updateLastUnlockedScrollY, { passive: true });
 
     return () => {
       if (frameId) window.cancelAnimationFrame(frameId);
-      window.removeEventListener("scroll", requestUpdate);
-      window.removeEventListener("resize", requestUpdate);
+      window.removeEventListener("scroll", updateLastUnlockedScrollY);
     };
-  }, [sectionNavItems]);
+  }, [isSearchActive]);
 
   useLayoutEffect(() => {
     function updateToolbarHeight() {
@@ -185,7 +196,7 @@ export function App() {
     };
   }, [isMobileSearchFocused, isSearchActive]);
 
-  useBodyScrollLock(isSearchActive);
+  useBodyScrollLock(isSearchActive, searchLockScrollY);
 
   useEffect(() => {
     return () => {
@@ -259,12 +270,20 @@ export function App() {
   }, []);
 
   function selectBuild(buildId: CheatBuildId) {
-    void loadBuild(buildId, { persist: true, resetView: true, showOverlay: true });
+    if (selectedBuild === buildId) {
+      const target = getBuildRoute(buildId);
+      if (window.location.pathname !== target) {
+        window.history.replaceState(null, "", target);
+      }
+      return;
+    }
+
+    void loadBuild(buildId, { persist: true, resetView: true, showOverlay: true, immediateOverlay: !selectedBuild });
   }
 
   async function loadBuild(
     buildId: CheatBuildId,
-    options: { persist: boolean; resetView: boolean; showOverlay: boolean },
+    options: { persist: boolean; resetView: boolean; showOverlay: boolean; immediateOverlay?: boolean },
   ) {
     const nextBuild = builds.find((item) => item.id === buildId);
     const token = buildLoadTokenRef.current + 1;
@@ -273,7 +292,7 @@ export function App() {
     setBuildLoadingLabel(label);
     setIsBuildPending(true);
     setIsInitialBuildLoading(!options.showOverlay);
-    if (options.showOverlay) showBuildLoading(label);
+    if (options.showOverlay) showBuildLoading(label, options.immediateOverlay);
 
     if (options.resetView) {
       resetSearch();
@@ -292,7 +311,10 @@ export function App() {
       pendingBuildRenderTokenRef.current = !options.showOverlay && nextGroups.length > 0 ? token : null;
       setGroups(nextGroups);
       setSelectedBuild(buildId);
-      if (options.persist) localStorage.setItem(STORAGE_KEY, buildId);
+      if (options.persist) safeSetStoredBuild(buildId);
+      if (window.location.pathname !== getBuildRoute(buildId)) {
+        window.history.replaceState(null, "", getBuildRoute(buildId));
+      }
       await nextPaint();
     } catch {
       if (buildLoadTokenRef.current === token) {
@@ -300,7 +322,7 @@ export function App() {
         currentBuildIdRef.current = null;
         setGroups([]);
         setSelectedBuild(null);
-        if (options.persist) localStorage.removeItem(STORAGE_KEY);
+        if (options.persist) safeRemoveStoredBuild();
       }
     } finally {
       if (buildLoadTokenRef.current === token) {
@@ -332,17 +354,26 @@ export function App() {
 
   function navigateToSection(id: string) {
     setIsMobileOverlayOpen(false);
-    scrollToSection(id, () => setActiveSectionId(id));
+    scrollToActiveSection(id);
   }
 
-  function showBuildLoading(label: string) {
+  function showBuildLoading(label: string, immediate = false) {
     setBuildLoadingLabel(label);
     if (isBuildLoadingActiveRef.current) return;
 
     if (loadingOverlayTimerRef.current !== null) window.clearTimeout(loadingOverlayTimerRef.current);
+    if (immediate) {
+      loadingOverlayTimerRef.current = null;
+      isBuildLoadingActiveRef.current = true;
+      buildLoadingShownAtRef.current = window.performance.now();
+      setIsBuildLoading(true);
+      return;
+    }
+
     loadingOverlayTimerRef.current = window.setTimeout(() => {
       loadingOverlayTimerRef.current = null;
       isBuildLoadingActiveRef.current = true;
+      buildLoadingShownAtRef.current = window.performance.now();
       setIsBuildLoading(true);
     }, BUILD_LOADING_OVERLAY_DELAY_MS);
   }
@@ -351,6 +382,23 @@ export function App() {
     if (loadingOverlayTimerRef.current !== null) {
       window.clearTimeout(loadingOverlayTimerRef.current);
       loadingOverlayTimerRef.current = null;
+    }
+
+    if (!isBuildLoadingActiveRef.current) {
+      setIsBuildLoading(false);
+      return;
+    }
+
+    const elapsed = window.performance.now() - buildLoadingShownAtRef.current;
+    const remaining = BUILD_LOADING_OVERLAY_MIN_VISIBLE_MS - elapsed;
+
+    if (remaining > 0) {
+      loadingOverlayTimerRef.current = window.setTimeout(() => {
+        loadingOverlayTimerRef.current = null;
+        isBuildLoadingActiveRef.current = false;
+        setIsBuildLoading(false);
+      }, remaining);
+      return;
     }
 
     isBuildLoadingActiveRef.current = false;
@@ -387,8 +435,23 @@ export function App() {
   }
 
   function handleSearchSubmit(nextQuery: string) {
+    const shouldUseMobileScrollLock =
+      nextQuery.trim().length > 0 &&
+      (isMobileSearchFocusedRef.current || window.matchMedia("(max-width: 899px)").matches);
+    const recentScrollY = unlockedScrollHistoryRef.current.reduce((maxScrollY, item) => Math.max(maxScrollY, item.y), 0);
+    const nextSearchLockScrollY = Math.max(
+      mobileSearchFocusScrollYRef.current,
+      lastUnlockedScrollYRef.current,
+      recentScrollY,
+      shouldUseMobileScrollLock ? window.scrollY : 0,
+    );
+
+    setSearchLockScrollY(shouldUseMobileScrollLock ? nextSearchLockScrollY : null);
     submitSearch(nextQuery);
-    if (nextQuery.trim().length === 0) setIsMobileSearchFocused(false);
+    if (nextQuery.trim().length === 0) {
+      isMobileSearchFocusedRef.current = false;
+      setIsMobileSearchFocused(false);
+    }
   }
 
   const browserBuild = build ?? warmedBuild;
@@ -413,71 +476,50 @@ export function App() {
       ) : null}
 
       {browserBuild ? (
-        <section
-          className={`browser-shell${isBrowserVisible ? "" : " browser-shell--prewarm"}`}
-          aria-hidden={!isBrowserVisible}
-          aria-label={`${browserBuild.label} 치트 목록`}
-        >
-          <BrowserToolbar
-            activeSectionTitle={browserActiveSectionTitle}
-            isInputFocused={isMobileSearchFocused}
-            isSearching={isSearchActive}
-            onClearSearch={resetSearch}
-            onOpenComments={() => setIsCommentsOpen(true)}
-            onOpenNavigation={() => setIsMobileOverlayOpen(true)}
-            onSearchBlur={() => setIsMobileSearchFocused(false)}
-            onSearchFocus={() => setIsMobileSearchFocused(true)}
-            onSearch={handleSearchSubmit}
-            query={query}
-            toolbarRef={isBrowserVisible ? toolbarRef : warmToolbarRef}
-          />
-          <div
-            className="toolbar-spacer"
-            style={{ height: isSearchActive ? `${toolbarHeight}px` : undefined }}
-            aria-hidden="true"
-          />
-
-          <div className="browser-layout">
-            <div className="group-list">
-              {isInitialBuildLoading && browserGroups.length === 0 ? (
-                <p className="empty-state">{buildLoadingLabel ?? "치트 목록 불러오는 중"}</p>
-              ) : (
-                <ProgressiveCheatGroupList
-                  key="browse"
-                  groups={browserGroups}
-                  isProgressive={pendingBuildRenderTokenRef.current !== null}
-                  getEntryCodeText={getEntryCodeText}
-                  getVariantCodeText={getVariantCodeText}
-                  onRenderComplete={isBrowserVisible ? handleBuildRenderComplete : undefined}
-                />
-              )}
-            </div>
-            {browserGroups.length > 0 ? (
-              <SectionNav items={browserSectionNavItems} activeId={activeSectionId} onNavigate={navigateToSection} />
-            ) : null}
-          </div>
-
-          <SearchResultsLayer
-            groups={filteredGroups}
-            getEntryCodeText={getEntryCodeText}
-            getVariantCodeText={getVariantCodeText}
-            hasQuery={hasFilterQuery}
-            isSearching={isSearchActive}
-            resetKey={normalizedFilterQuery}
-          />
-
-          {isMobileOverlayOpen ? (
-            <MobileSectionOverlay
-              activeId={activeSectionId}
-              activeTitle={browserActiveSectionTitle}
-              items={browserSectionNavItems}
-              onClose={() => setIsMobileOverlayOpen(false)}
-              onNavigate={navigateToSection}
-            />
-          ) : null}
-          <CommentsButton onClick={() => setIsCommentsOpen(true)} />
-          <CommentsPanel isOpen={isCommentsOpen} onClose={() => setIsCommentsOpen(false)} />
-        </section>
+        <CheatBrowser
+          activeSectionId={activeSectionId}
+          activeSectionTitle={browserActiveSectionTitle}
+          build={browserBuild}
+          filteredGroups={filteredGroups}
+          getEntryCodeText={getEntryCodeText}
+          getVariantCodeText={getVariantCodeText}
+          groups={browserGroups}
+          hasFilterQuery={hasFilterQuery}
+          isBrowserVisible={isBrowserVisible}
+          isCommentsOpen={isCommentsOpen}
+          isInitialBuildLoading={isInitialBuildLoading}
+          isMobileOverlayOpen={isMobileOverlayOpen}
+          isMobileSearchFocused={isMobileSearchFocused}
+          isProgressive={pendingBuildRenderTokenRef.current !== null}
+          isSearchActive={isSearchActive}
+          loadingLabel={buildLoadingLabel}
+          normalizedFilterQuery={normalizedFilterQuery}
+          onClearSearch={resetSearch}
+          onCloseComments={() => setIsCommentsOpen(false)}
+          onCloseNavigation={() => setIsMobileOverlayOpen(false)}
+          onNavigateSection={navigateToSection}
+          onOpenComments={() => setIsCommentsOpen(true)}
+          onOpenNavigation={() => setIsMobileOverlayOpen(true)}
+          onRenderComplete={handleBuildRenderComplete}
+          onSearch={handleSearchSubmit}
+          onSearchBlur={() => {
+            isMobileSearchFocusedRef.current = false;
+            setIsMobileSearchFocused(false);
+          }}
+          onSearchFocus={() => {
+            mobileSearchFocusScrollYRef.current = lastUnlockedScrollYRef.current;
+            isMobileSearchFocusedRef.current = true;
+            setIsMobileSearchFocused(true);
+          }}
+          onSearchPointerDown={() => {
+            mobileSearchFocusScrollYRef.current = window.scrollY;
+            lastUnlockedScrollYRef.current = window.scrollY;
+          }}
+          query={query}
+          sectionNavItems={browserSectionNavItems}
+          toolbarHeight={toolbarHeight}
+          toolbarRef={isBrowserVisible ? toolbarRef : warmToolbarRef}
+        />
       ) : null}
       <RomDropOverlay isActive={isRomDragging} />
       <BuildLoadingOverlay isActive={isBuildLoading} label={buildLoadingLabel} />

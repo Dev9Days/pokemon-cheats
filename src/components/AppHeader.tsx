@@ -17,6 +17,10 @@ export function AppHeader({
   onSelectRomFile,
   romStatus,
 }: AppHeaderProps) {
+  function handleBuildChange(value: string) {
+    onSelectBuild(value as CheatBuildId);
+  }
+
   return (
     <header className="app-header">
       <div>
@@ -33,7 +37,13 @@ export function AppHeader({
                 role="status"
               />
             </span>
-            <select value={build.id} onChange={(event) => onSelectBuild(event.target.value as CheatBuildId)}>
+            <select
+              data-build-select="true"
+              value={build.id}
+              onBlur={(event) => handleBuildChange(event.currentTarget.value)}
+              onChange={(event) => handleBuildChange(event.currentTarget.value)}
+              onInput={(event) => handleBuildChange(event.currentTarget.value)}
+            >
               {builds.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.label}

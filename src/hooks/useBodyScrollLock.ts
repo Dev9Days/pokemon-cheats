@@ -1,10 +1,10 @@
 import { useEffect } from "react";
 
-export function useBodyScrollLock(isLocked: boolean) {
+export function useBodyScrollLock(isLocked: boolean, scrollYOverride?: number | null) {
   useEffect(() => {
     if (!isLocked) return;
 
-    const scrollY = window.scrollY;
+    const scrollY = scrollYOverride ?? window.scrollY;
     const bodyStyle = document.body.style;
     const rootStyle = document.documentElement.style;
     const previousBodyOverflow = bodyStyle.overflow;

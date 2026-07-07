@@ -2,9 +2,9 @@ const CLOUDFLARE_BEACON_SRC = "https://static.cloudflareinsights.com/beacon.min.
 const CLOUDFLARE_BEACON_SCRIPT_ID = "cloudflare-web-analytics";
 
 export function installCloudflareAnalytics() {
-  const token = import.meta.env.VITE_CLOUDFLARE_WEB_ANALYTICS_TOKEN?.trim();
+  const token = process.env.NEXT_PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN?.trim();
 
-  if (!import.meta.env.PROD || !token || document.getElementById(CLOUDFLARE_BEACON_SCRIPT_ID)) {
+  if (process.env.NODE_ENV !== "production" || !token || document.getElementById(CLOUDFLARE_BEACON_SCRIPT_ID)) {
     return;
   }
 

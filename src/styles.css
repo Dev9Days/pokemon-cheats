@@ -127,6 +127,14 @@ button {
   outline: none;
 }
 
+.build-select__debug-url {
+  grid-column: 2;
+  color: #64748b;
+  font-size: 11px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
 .rom-file-picker {
   display: inline-flex;
   align-items: center;
@@ -303,13 +311,16 @@ button {
   gap: 12px;
 }
 
+.build-grid a,
 .build-grid button {
   min-height: 126px;
   padding: 16px;
   border: 1px solid #d5dbe3;
   border-radius: 8px;
   background: #fff;
+  color: inherit;
   text-align: left;
+  text-decoration: none;
   cursor: pointer;
   transition:
     border-color 0.15s ease,
@@ -317,6 +328,7 @@ button {
     transform 0.15s ease;
 }
 
+.build-grid a:hover,
 .build-grid button:hover {
   border-color: #3a6ea5;
   box-shadow: 0 10px 28px rgb(29 34 40 / 9%);
@@ -486,6 +498,15 @@ button {
 
 .icon-button:hover {
   border-color: #3a6ea5;
+}
+
+.copy-retry-spinner {
+  width: 15px;
+  height: 15px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 999px;
+  animation: build-loading-spin 0.75s linear infinite;
 }
 
 .search-box {

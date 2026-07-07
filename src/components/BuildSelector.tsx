@@ -13,10 +13,18 @@ export function BuildSelector({ builds, onSelectBuild }: BuildSelectorProps) {
       </p>
       <div className="build-grid">
         {builds.map((item) => (
-          <button key={item.id} type="button" onClick={() => onSelectBuild(item.id)}>
+          <a
+            key={item.id}
+            data-loading-label={`${item.label} 불러오는 중`}
+            href={`/emerald/cheats/${item.id}/`}
+            onClick={(event) => {
+              event.preventDefault();
+              onSelectBuild(item.id);
+            }}
+          >
             <strong>{item.label}</strong>
             <code>MD5: {item.md5}</code>
-          </button>
+          </a>
         ))}
       </div>
     </section>
