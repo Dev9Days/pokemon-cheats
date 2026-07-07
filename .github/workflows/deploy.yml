@@ -40,13 +40,13 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          VITE_GISCUS_REPO: ${{ vars.VITE_GISCUS_REPO }}
-          VITE_GISCUS_REPO_ID: ${{ vars.VITE_GISCUS_REPO_ID }}
-          VITE_GISCUS_BUG_CATEGORY: ${{ vars.VITE_GISCUS_BUG_CATEGORY }}
-          VITE_GISCUS_BUG_CATEGORY_ID: ${{ vars.VITE_GISCUS_BUG_CATEGORY_ID }}
-          VITE_GISCUS_REQUEST_CATEGORY: ${{ vars.VITE_GISCUS_REQUEST_CATEGORY }}
-          VITE_GISCUS_REQUEST_CATEGORY_ID: ${{ vars.VITE_GISCUS_REQUEST_CATEGORY_ID }}
-          VITE_CLOUDFLARE_WEB_ANALYTICS_TOKEN: ${{ vars.VITE_CLOUDFLARE_WEB_ANALYTICS_TOKEN }}
+          NEXT_PUBLIC_GISCUS_REPO: ${{ vars.NEXT_PUBLIC_GISCUS_REPO }}
+          NEXT_PUBLIC_GISCUS_REPO_ID: ${{ vars.NEXT_PUBLIC_GISCUS_REPO_ID }}
+          NEXT_PUBLIC_GISCUS_BUG_CATEGORY: ${{ vars.NEXT_PUBLIC_GISCUS_BUG_CATEGORY }}
+          NEXT_PUBLIC_GISCUS_BUG_CATEGORY_ID: ${{ vars.NEXT_PUBLIC_GISCUS_BUG_CATEGORY_ID }}
+          NEXT_PUBLIC_GISCUS_REQUEST_CATEGORY: ${{ vars.NEXT_PUBLIC_GISCUS_REQUEST_CATEGORY }}
+          NEXT_PUBLIC_GISCUS_REQUEST_CATEGORY_ID: ${{ vars.NEXT_PUBLIC_GISCUS_REQUEST_CATEGORY_ID }}
+          NEXT_PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN: ${{ vars.NEXT_PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN }}
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
@@ -54,7 +54,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: out
 
   deploy:
     environment:
