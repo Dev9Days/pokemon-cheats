@@ -4,8 +4,6 @@ const LEGACY_APP_PATHS = new Set([
   "/",
   "/pokemon-cheats",
   "/pokemon-cheats/",
-  "/pokemon-emerald-cheats",
-  "/pokemon-emerald-cheats/",
   "/emerald/cheats/",
 ]);
 
