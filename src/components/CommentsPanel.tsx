@@ -6,6 +6,8 @@ const baseGiscusConfig = {
   repoId: process.env.NEXT_PUBLIC_GISCUS_REPO_ID,
 };
 
+const GISCUS_DISCUSSION_TERM = "pokemon-emerald-cheats";
+
 const giscusCategories = [
   {
     id: "bug",
@@ -65,7 +67,8 @@ export function CommentsPanel({ isOpen, onClose }: { isOpen: boolean; onClose: (
     script.setAttribute("data-repo-id", configuredBase.repoId);
     script.setAttribute("data-category", selectedCategory.category);
     script.setAttribute("data-category-id", selectedCategory.categoryId);
-    script.setAttribute("data-mapping", "pathname");
+    script.setAttribute("data-mapping", "specific");
+    script.setAttribute("data-term", GISCUS_DISCUSSION_TERM);
     script.setAttribute("data-strict", "0");
     script.setAttribute("data-reactions-enabled", "1");
     script.setAttribute("data-emit-metadata", "0");
