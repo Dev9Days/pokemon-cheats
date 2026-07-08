@@ -3,6 +3,7 @@ import type { CheatGroup } from "../types/cheat";
 import { CheatGroupView } from "./CheatGroupView";
 
 type SearchResultsLayerProps = {
+  copyCacheKey?: string;
   getEntryCodeText: (entryId: string) => Promise<string> | string;
   getVariantCodeText: (entryId: string, variantId: string) => Promise<string> | string;
   groups: CheatGroup[];
@@ -12,6 +13,7 @@ type SearchResultsLayerProps = {
 };
 
 export function SearchResultsLayer({
+  copyCacheKey,
   getEntryCodeText,
   getVariantCodeText,
   groups,
@@ -52,6 +54,7 @@ export function SearchResultsLayer({
               {groups.map((group) => (
                 <CheatGroupView
                   key={group.id}
+                  copyCacheKey={copyCacheKey}
                   group={group}
                   getEntryCodeText={getEntryCodeText}
                   getVariantCodeText={getVariantCodeText}

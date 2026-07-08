@@ -31,7 +31,6 @@ import { installCloudflareAnalytics } from "./utils/cloudflareAnalytics";
 import { normalizeAppRoute } from "./utils/routing";
 
 const BUILD_LOADING_OVERLAY_DELAY_MS = 150;
-const BUILD_LOADING_OVERLAY_MIN_VISIBLE_MS = 1200;
 const SEARCH_RESULTS_CLEANUP_DELAY_MS = 180;
 
 type NetworkInformationLike = {
@@ -69,7 +68,6 @@ export function App({
   const currentBuildIdRef = useRef<CheatBuildId | null>(initialBuild);
   const dragDepthRef = useRef(0);
   const isBuildLoadingActiveRef = useRef(false);
-  const buildLoadingShownAtRef = useRef(0);
   const loadingOverlayTimerRef = useRef<number | null>(null);
   const warmRenderTokenRef = useRef(0);
   const toolbarRef = useRef<HTMLDivElement | null>(null);
@@ -365,7 +363,6 @@ export function App({
     if (immediate) {
       loadingOverlayTimerRef.current = null;
       isBuildLoadingActiveRef.current = true;
-      buildLoadingShownAtRef.current = window.performance.now();
       setIsBuildLoading(true);
       return;
     }
@@ -373,7 +370,6 @@ export function App({
     loadingOverlayTimerRef.current = window.setTimeout(() => {
       loadingOverlayTimerRef.current = null;
       isBuildLoadingActiveRef.current = true;
-      buildLoadingShownAtRef.current = window.performance.now();
       setIsBuildLoading(true);
     }, BUILD_LOADING_OVERLAY_DELAY_MS);
   }
@@ -386,18 +382,6 @@ export function App({
 
     if (!isBuildLoadingActiveRef.current) {
       setIsBuildLoading(false);
-      return;
-    }
-
-    const elapsed = window.performance.now() - buildLoadingShownAtRef.current;
-    const remaining = BUILD_LOADING_OVERLAY_MIN_VISIBLE_MS - elapsed;
-
-    if (remaining > 0) {
-      loadingOverlayTimerRef.current = window.setTimeout(() => {
-        loadingOverlayTimerRef.current = null;
-        isBuildLoadingActiveRef.current = false;
-        setIsBuildLoading(false);
-      }, remaining);
       return;
     }
 

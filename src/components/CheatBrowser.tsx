@@ -106,7 +106,7 @@ export function CheatBrowser({
             <p className="empty-state">{loadingLabel ?? "치트 목록 불러오는 중"}</p>
           ) : (
             <ProgressiveCheatGroupList
-              key={`browse:${build.id}`}
+              copyCacheKey={build.id}
               groups={groups}
               isProgressive={isProgressive}
               getEntryCodeText={getEntryCodeText}
@@ -119,7 +119,7 @@ export function CheatBrowser({
       </div>
 
       <SearchResultsLayer
-        key={`search:${build.id}`}
+        copyCacheKey={build.id}
         groups={filteredGroups}
         getEntryCodeText={getEntryCodeText}
         getVariantCodeText={getVariantCodeText}

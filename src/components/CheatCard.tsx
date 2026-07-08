@@ -28,16 +28,19 @@ function CheatBadges({ badges }: { badges?: CheatEntry["badges"] }) {
 }
 
 type CheatCardProps = {
+  copyCacheKey?: string;
   cheat: CheatEntry;
   getEntryCodeText: (entryId: string) => Promise<string> | string;
   getVariantCodeText: (entryId: string, variantId: string) => Promise<string> | string;
 };
 
 const VariantRow = memo(function VariantRow({
+  copyCacheKey,
   entryId,
   getVariantCodeText,
   variant,
 }: {
+  copyCacheKey?: string;
   entryId: string;
   getVariantCodeText: (entryId: string, variantId: string) => Promise<string> | string;
   variant: CheatVariant;
@@ -55,6 +58,7 @@ const VariantRow = memo(function VariantRow({
         {variant.note ? <span>{variant.note}</span> : null}
       </div>
       <CopyButton
+        cacheKey={copyCacheKey}
         label={variant.title}
         getText={() => getVariantCodeText(entryId, variant.id)}
       />
@@ -63,6 +67,7 @@ const VariantRow = memo(function VariantRow({
 });
 
 export const CheatCard = memo(function CheatCard({
+  copyCacheKey,
   cheat,
   getEntryCodeText,
   getVariantCodeText,
@@ -136,6 +141,7 @@ export const CheatCard = memo(function CheatCard({
         </div>
         {!cheat.variants ? (
           <CopyButton
+            cacheKey={copyCacheKey}
             label={cheat.title}
             getText={() => getEntryCodeText(cheat.id)}
           />
@@ -165,6 +171,7 @@ export const CheatCard = memo(function CheatCard({
             {visibleVariants?.map((variant) => (
               <VariantRow
                 key={variant.id}
+                copyCacheKey={copyCacheKey}
                 entryId={cheat.id}
                 getVariantCodeText={getVariantCodeText}
                 variant={variant}

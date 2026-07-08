@@ -6,6 +6,7 @@ const INITIAL_GROUP_COUNT = 2;
 const GROUPS_PER_FRAME = 1;
 
 type ProgressiveCheatGroupListProps = {
+  copyCacheKey?: string;
   getEntryCodeText: (entryId: string) => Promise<string> | string;
   getVariantCodeText: (entryId: string, variantId: string) => Promise<string> | string;
   groups: CheatGroup[];
@@ -14,6 +15,7 @@ type ProgressiveCheatGroupListProps = {
 };
 
 export function ProgressiveCheatGroupList({
+  copyCacheKey,
   getEntryCodeText,
   getVariantCodeText,
   groups,
@@ -76,6 +78,7 @@ export function ProgressiveCheatGroupList({
       {groups.slice(0, visibleGroupCount).map((group) => (
         <CheatGroupView
           key={group.id}
+          copyCacheKey={copyCacheKey}
           group={group}
           getEntryCodeText={getEntryCodeText}
           getVariantCodeText={getVariantCodeText}
