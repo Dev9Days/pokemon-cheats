@@ -1,13 +1,14 @@
 import { Search } from "lucide-react";
-import { memo, useEffect, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import type { CheatEntry, CheatVariant } from "../types/cheat";
 import { CopyButton } from "./CopyButton";
 
 const VARIANT_FILTER_THRESHOLD = 20;
 const VARIANT_SCROLL_THRESHOLD = 4;
 const PROGRESSIVE_VARIANT_THRESHOLD = 40;
-const INITIAL_VARIANT_COUNT = 24;
-const VARIANTS_PER_FRAME = 80;
+const INITIAL_VARIANT_COUNT = 12;
+const VARIANTS_PER_PAGE = 36;
+const VARIANT_SENTINEL_MARGIN = "120px";
 
 function CheatBadges({ badges }: { badges?: CheatEntry["badges"] }) {
   if (!badges?.length) return null;
@@ -73,6 +74,7 @@ export const CheatCard = memo(function CheatCard({
   getVariantCodeText,
 }: CheatCardProps) {
   const note = cheat.note?.trim();
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
   const [variantQuery, setVariantQuery] = useState("");
   const normalizedVariantQuery = variantQuery.trim().toLowerCase();
   const shouldShowVariantFilter = (cheat.variants?.length ?? 0) >= VARIANT_FILTER_THRESHOLD;
@@ -95,6 +97,7 @@ export const CheatCard = memo(function CheatCard({
   const visibleVariants = shouldRenderVariantsProgressively
     ? variants?.slice(0, visibleVariantCount)
     : variants;
+  const hiddenVariantCount = Math.max(0, (variants?.length ?? 0) - (visibleVariants?.length ?? 0));
 
   useEffect(() => {
     const totalCount = variants?.length ?? 0;
@@ -104,30 +107,30 @@ export const CheatCard = memo(function CheatCard({
       return;
     }
 
-    let cancelled = false;
-    let frameId = 0;
-    let nextCount = Math.min(totalCount, INITIAL_VARIANT_COUNT);
-
-    setVisibleVariantCount(nextCount);
-
-    function renderMore() {
-      frameId = window.requestAnimationFrame(() => {
-        if (cancelled) return;
-
-        nextCount = Math.min(totalCount, nextCount + VARIANTS_PER_FRAME);
-        setVisibleVariantCount(nextCount);
-
-        if (nextCount < totalCount) renderMore();
-      });
-    }
-
-    if (nextCount < totalCount) renderMore();
-
-    return () => {
-      cancelled = true;
-      if (frameId) window.cancelAnimationFrame(frameId);
-    };
+    setVisibleVariantCount(Math.min(totalCount, INITIAL_VARIANT_COUNT));
   }, [shouldRenderVariantsProgressively, variants]);
+
+  function showMoreVariants() {
+    setVisibleVariantCount((currentCount) =>
+      Math.min(variants?.length ?? 0, currentCount + VARIANTS_PER_PAGE),
+    );
+  }
+
+  useEffect(() => {
+    if (!shouldRenderVariantsProgressively || hiddenVariantCount === 0) return;
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) showMoreVariants();
+      },
+      { rootMargin: VARIANT_SENTINEL_MARGIN },
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hiddenVariantCount, shouldRenderVariantsProgressively, variants?.length]);
 
   return (
     <article className="cheat-card">
@@ -177,6 +180,9 @@ export const CheatCard = memo(function CheatCard({
                 variant={variant}
               />
             ))}
+            {hiddenVariantCount > 0 ? (
+              <div ref={sentinelRef} className="variant-sentinel" role="listitem" aria-hidden="true" />
+            ) : null}
             {variants?.length === 0 ? <p className="variant-empty">검색 결과가 없습니다.</p> : null}
           </div>
         </>

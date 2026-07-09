@@ -841,6 +841,11 @@ pre {
   border-bottom: 0;
 }
 
+.variant-sentinel {
+  width: 100%;
+  height: 1px;
+}
+
 .variant-row strong,
 .variant-row span {
   display: block;
