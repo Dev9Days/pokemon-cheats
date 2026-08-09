@@ -4,7 +4,7 @@
 
 ## Website
 
-[포켓몬스터 에메랄드 치트](https://pokemon.9days.dev/emerald/cheats)
+[포켓몬스터 에메랄드 치트](https://pokemon.9days.dev/)
 
 ## Features
 

@@ -48,6 +48,9 @@ jobs:
           NEXT_PUBLIC_GISCUS_REQUEST_CATEGORY_ID: ${{ vars.NEXT_PUBLIC_GISCUS_REQUEST_CATEGORY_ID }}
           NEXT_PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN: ${{ vars.NEXT_PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN }}
 
+      - name: Validate SEO output
+        run: npm run validate:seo
+
       - name: Configure Pages
         uses: actions/configure-pages@v5
 

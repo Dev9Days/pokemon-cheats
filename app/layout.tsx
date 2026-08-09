@@ -39,7 +39,7 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "Dev9Days" }],
   alternates: {
-    canonical: "/emerald/cheats/",
+    canonical: "/",
   },
   icons: {
     icon: "/favicon.ico",
@@ -56,7 +56,7 @@ export const metadata: Metadata = {
     siteName: seoTitle,
     title: seoTitle,
     description: seoDescription,
-    url: "/emerald/cheats/",
+    url: "/",
     images: [
       {
         url: "/og-image.png",

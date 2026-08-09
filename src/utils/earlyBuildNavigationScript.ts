@@ -85,7 +85,11 @@ export const earlyBuildNavigationScript = `
       const build = getStoredBuild();
       if (build && allowed.has(build)) {
         const target = getBuildRoute(build) + window.location.search + window.location.hash;
-        if (window.location.pathname === "/emerald/cheats/" || window.location.pathname === "/emerald/cheats") {
+        if (
+          window.location.pathname === "/" ||
+          window.location.pathname === "/emerald/cheats/" ||
+          window.location.pathname === "/emerald/cheats"
+        ) {
           window.location.replace(target);
           return true;
         }

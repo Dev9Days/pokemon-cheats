@@ -14,7 +14,7 @@ type VersionPageProps = {
 
 const fallbackMetadata: Metadata = {
   alternates: {
-    canonical: "/emerald/cheats/",
+    canonical: "/",
   },
   robots: {
     index: false,
@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: VersionPageProps): Promise<Me
     title: seoTitle,
     description: seoDescription,
     alternates: {
-      canonical: "/emerald/cheats/",
+      canonical: "/",
     },
     openGraph: {
       type: "website",
@@ -42,7 +42,7 @@ export async function generateMetadata({ params }: VersionPageProps): Promise<Me
       siteName: seoTitle,
       title: seoTitle,
       description: seoDescription,
-      url: "/emerald/cheats/",
+      url: "/",
       images: [
         {
           url: "/og-image.png",

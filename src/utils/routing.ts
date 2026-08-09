@@ -1,9 +1,10 @@
-export const CANONICAL_APP_PATH = "/emerald/cheats/";
+export const CANONICAL_APP_PATH = "/";
 
 const LEGACY_APP_PATHS = new Set([
-  "/",
   "/pokemon-cheats",
   "/pokemon-cheats/",
+  "/emerald/cheats",
+  "/emerald/cheats/",
 ]);
 
 export function normalizeAppRoute() {

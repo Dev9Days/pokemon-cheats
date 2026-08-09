@@ -1,13 +1,24 @@
+import type { Metadata } from "next";
 import { App } from "../../../src/App";
 import { getCheatStructure } from "../../../src/data";
 import { seoDescription, seoTitle, siteUrl } from "../../../src/seo";
+
+export const metadata: Metadata = {
+  alternates: {
+    canonical: "/",
+  },
+  robots: {
+    index: false,
+    follow: true,
+  },
+};
 
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "WebApplication",
   name: seoTitle,
   alternateName: "Pokemon Emerald Cheats",
-  url: `${siteUrl}/emerald/cheats/`,
+  url: `${siteUrl}/`,
   applicationCategory: "UtilitiesApplication",
   operatingSystem: "Any",
   inLanguage: "ko-KR",
