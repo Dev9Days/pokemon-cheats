@@ -28,7 +28,6 @@ import {
 } from "./utils/buildSelection";
 import { filterGroups, getSectionNavItems } from "./utils/cheats";
 import { installCloudflareAnalytics } from "./utils/cloudflareAnalytics";
-import { normalizeAppRoute } from "./utils/routing";
 
 const BUILD_LOADING_OVERLAY_DELAY_MS = 150;
 const SEARCH_RESULTS_CLEANUP_DELAY_MS = 180;
@@ -112,7 +111,6 @@ export function App({
 
   useEffect(() => {
     (window as HydrationAwareWindow).__pokemonEmeraldCheatsHydrated = true;
-    normalizeAppRoute();
     installCloudflareAnalytics();
   }, []);
 

@@ -3,9 +3,14 @@ import { join } from "node:path";
 
 const siteOrigin = "https://pokemon.9days.dev";
 const sitemapPath = join("out", "sitemap.xml");
+const legacyRoutingPath = join("src", "utils", "routing.ts");
 
 function fail(message) {
   throw new Error(`SEO validation failed: ${message}`);
+}
+
+if (existsSync(legacyRoutingPath)) {
+  fail("client-side URL rewriting can retain alias noindex metadata");
 }
 
 function readOutput(pathname) {
