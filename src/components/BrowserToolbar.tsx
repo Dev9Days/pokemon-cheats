@@ -1,5 +1,6 @@
 import { MessageCircle, X } from "lucide-react";
 import type { RefObject } from "react";
+import { QuestionMarkIcon } from "./QuestionMarkIcon";
 import { SearchBox } from "./SearchBox";
 
 type BrowserToolbarProps = {
@@ -8,6 +9,7 @@ type BrowserToolbarProps = {
   isSearching: boolean;
   onClearSearch: () => void;
   onOpenComments: () => void;
+  onOpenHelp: () => void;
   onOpenNavigation: () => void;
   onSearchBlur: () => void;
   onSearchFocus: () => void;
@@ -23,6 +25,7 @@ export function BrowserToolbar({
   isSearching,
   onClearSearch,
   onOpenComments,
+  onOpenHelp,
   onOpenNavigation,
   onSearchBlur,
   onSearchFocus,
@@ -53,6 +56,9 @@ export function BrowserToolbar({
             onPointerDown={onSearchPointerDown}
             onSearch={onSearch}
           />
+          <button className="mobile-help-button" type="button" onClick={onOpenHelp} aria-label="치트 사용 가이드 열기">
+            <QuestionMarkIcon size={20} />
+          </button>
           <button className="mobile-comment-button" type="button" onClick={onOpenComments} aria-label="댓글 열기">
             <MessageCircle size={17} />
           </button>

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { CheatsPageContent } from "../../src/components/CheatsPageContent";
 
 export const metadata: Metadata = {
   alternates: {
@@ -10,4 +11,6 @@ export const metadata: Metadata = {
   },
 };
 
-export { default } from "../page";
+export default function PokemonCheatsAliasPage() {
+  return <CheatsPageContent />;
+}

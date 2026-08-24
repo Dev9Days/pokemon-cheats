@@ -478,7 +478,7 @@ export const pokemonGroup: CheatGroup = {
               codes: []
             }
           ],
-          note: "등록된 편의 도구를 해제한 다음 실행하세요. 뮤와 테오키스는 야생 포켓몬 지정 출현으로 잡으면 사용할 수 없으므로 이 목록의 전투 전용 코드를 사용하세요."
+          note: "원하는 코드를 켠 뒤 게임 화면에서 L+SELECT를 동시에 누르면 전투가 시작됩니다. 키보드·패드에서는 에뮬레이터의 버튼 설정을 확인하세요. 등록된 편의 도구를 해제한 다음 실행하세요. 뮤와 테오키스는 야생 포켓몬 지정 출현으로 잡으면 사용할 수 없으므로 이 목록의 전투 전용 코드를 사용하세요."
         }
       ]
     },
@@ -1134,7 +1134,7 @@ export const pokemonGroup: CheatGroup = {
               codeType: "Codebreaker",
               codes: [],
               variants: createWildPokemonStructureVariants(),
-              note: "원하는 포켓몬을 복사해 적용하면 야생 포켓몬 출현 대상이 바뀝니다."
+              note: "즉시 전투가 시작되는 치트가 아닙니다. 원하는 포켓몬의 코드를 적용한 뒤 풀숲·동굴·물 위 등에서 평소처럼 야생 포켓몬을 만나세요."
             }
           ]
         }

@@ -18,25 +18,33 @@ const systemMasterBadge: CheatBadge = {
   description: "시스템/기타 마스터 코드를 먼저 적용하세요.",
 };
 
+function keyInputBadge(label: string): CheatBadge[] {
+  return [{
+    kind: "key-input",
+    label,
+    description: `치트를 켠 뒤 게임 화면에서 표시된 조작(${label})을 하세요. 키보드·패드 키는 에뮬레이터 설정에서 확인하세요.`,
+  }];
+}
+
 const keyInputBadgesByEntryId: Record<string, CheatBadge[]> = {
-  "items.shop.count-99": [{ kind: "key-input", label: "L 유지" }],
-  "상대방-포켓몬-잡기": [{ kind: "key-input", label: "L+R" }],
-  "pokemon.starter.extra": [{ kind: "key-input", label: "L+R+UP" }],
-  "pokemon.starter.gen2.required": [{ kind: "key-input", label: "L+R+DOWN" }],
-  "pokemon.legendary.generated": [{ kind: "key-input", label: "L+SELECT" }],
-  "서핑-뱃지x": [{ kind: "key-input", label: "R+SELECT" }],
-  "어디서든-공중-날기-뱃지x": [{ kind: "key-input", label: "L+R" }],
-  "포켓몬-회복-원격-센터": [{ kind: "key-input", label: "L+SELECT" }],
-  "pc-접근": [{ kind: "key-input", label: "L+SELECT" }],
-  "기술-지우기": [{ kind: "key-input", label: "L+SELECT" }],
-  "remote.shop.generated": [{ kind: "key-input", label: "L+SELECT" }],
-  "system.badges.generated": [{ kind: "key-input", label: "L+SELECT" }],
-  "트레이너-amp-관장과-재-전투": [{ kind: "key-input", label: "대화 중 L" }],
-  "시간-재-설정": [{ kind: "key-input", label: "L+SELECT" }],
-  "배틀-프론티어-배틀-포인트": [{ kind: "key-input", label: "대화 중 L 유지 ▶ A" }],
-  "이상한-소포-활성화-mystery-gift": [{ kind: "key-input", label: "L+SELECT" }],
-  "system.dex-event.mystery-gift-ticket": [{ kind: "key-input", label: "L+SELECT" }],
-  "전국-도감-활성화": [{ kind: "key-input", label: "L+SELECT" }],
+  "items.shop.count-99": keyInputBadge("L 유지"),
+  "상대방-포켓몬-잡기": keyInputBadge("L+R"),
+  "pokemon.starter.extra": keyInputBadge("L+R+UP"),
+  "pokemon.starter.gen2.required": keyInputBadge("L+R+DOWN"),
+  "pokemon.legendary.generated": keyInputBadge("L+SELECT"),
+  "서핑-뱃지x": keyInputBadge("R+SELECT"),
+  "어디서든-공중-날기-뱃지x": keyInputBadge("L+R"),
+  "포켓몬-회복-원격-센터": keyInputBadge("L+SELECT"),
+  "pc-접근": keyInputBadge("L+SELECT"),
+  "기술-지우기": keyInputBadge("L+SELECT"),
+  "remote.shop.generated": keyInputBadge("L+SELECT"),
+  "system.badges.generated": keyInputBadge("L+SELECT"),
+  "트레이너-amp-관장과-재-전투": keyInputBadge("대화 중 L"),
+  "시간-재-설정": keyInputBadge("L+SELECT"),
+  "배틀-프론티어-배틀-포인트": keyInputBadge("대화 중 L 유지 ▶ A"),
+  "이상한-소포-활성화-mystery-gift": keyInputBadge("L+SELECT"),
+  "system.dex-event.mystery-gift-ticket": keyInputBadge("L+SELECT"),
+  "전국-도감-활성화": keyInputBadge("L+SELECT"),
 };
 
 const masterBadgesByEntryId: Record<string, CheatBadge[]> = {

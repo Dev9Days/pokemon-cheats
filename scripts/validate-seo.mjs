@@ -45,6 +45,10 @@ function assertIndexable(pathname, expectedCanonical) {
   if (canonical !== expectedCanonical) {
     fail(`${filePath} canonical must be ${expectedCanonical} (received: ${canonical})`);
   }
+
+  if (!html.includes('data-root-intro="true"')) {
+    fail(`${filePath} must include a visible root introduction`);
+  }
 }
 
 function assertAliasIsNoindex(pathname) {
@@ -62,6 +66,9 @@ function assertAliasIsNoindex(pathname) {
   }
   if (canonical !== `${siteOrigin}/`) {
     fail(`${filePath} alias canonical must point to the primary cheats page`);
+  }
+  if (html.includes('data-root-intro="true"')) {
+    fail(`${filePath} alias must not render the root-only introduction`);
   }
 }
 
