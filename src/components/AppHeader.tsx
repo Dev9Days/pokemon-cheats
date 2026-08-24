@@ -3,18 +3,24 @@ import type { CheatBuild, CheatBuildId } from "../types/cheat";
 type AppHeaderProps = {
   build: CheatBuild | null;
   builds: CheatBuild[];
+  description?: string;
   isBuildLoading: boolean;
   onSelectBuild: (buildId: CheatBuildId) => void;
   onSelectRomFile: (file: File) => void;
+  romMismatchFileName: string | null;
+  romMismatchMd5: string | null;
   romStatus: string | null;
 };
 
 export function AppHeader({
   build,
   builds,
+  description,
   isBuildLoading,
   onSelectBuild,
   onSelectRomFile,
+  romMismatchFileName,
+  romMismatchMd5,
   romStatus,
 }: AppHeaderProps) {
   function handleBuildChange(value: string) {
@@ -25,6 +31,7 @@ export function AppHeader({
     <header className="app-header">
       <div>
         <h1>포켓몬스터 에메랄드 치트</h1>
+        {description ? <p data-root-intro="true">{description}</p> : null}
       </div>
       <div className="build-tools">
         {build ? (
@@ -64,10 +71,12 @@ export function AppHeader({
           />
           <span>GBA 파일 선택</span>
         </label>
-        {romStatus ? (
+        {!build && romMismatchFileName && romMismatchMd5 ? (
+          <p className="rom-status">
+            <strong>{romMismatchFileName}</strong> MD5: <code>{romMismatchMd5}</code>
+          </p>
+        ) : romStatus ? (
           <p className="rom-status">{romStatus}</p>
-        ) : build ? (
-          <p className="rom-drop-hint">.gba 파일을 끌어놓으면 MD5로 버전을 확인합니다.</p>
         ) : null}
       </div>
     </header>

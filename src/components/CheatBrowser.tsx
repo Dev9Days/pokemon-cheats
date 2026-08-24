@@ -4,6 +4,8 @@ import type { SectionNavItem } from "../utils/cheats";
 import { BrowserToolbar } from "./BrowserToolbar";
 import { CommentsButton } from "./CommentsButton";
 import { CommentsPanel } from "./CommentsPanel";
+import { CheatUsageGuide } from "./CheatUsageGuide";
+import { HelpButton } from "./HelpButton";
 import { MobileSectionOverlay } from "./MobileSectionOverlay";
 import { ProgressiveCheatGroupList } from "./ProgressiveCheatGroupList";
 import { SearchResultsLayer } from "./SearchResultsLayer";
@@ -20,6 +22,7 @@ type CheatBrowserProps = {
   hasFilterQuery: boolean;
   isBrowserVisible: boolean;
   isCommentsOpen: boolean;
+  isHelpOpen: boolean;
   isInitialBuildLoading: boolean;
   isMobileOverlayOpen: boolean;
   isMobileSearchFocused: boolean;
@@ -29,9 +32,11 @@ type CheatBrowserProps = {
   normalizedFilterQuery: string;
   onClearSearch: () => void;
   onCloseComments: () => void;
+  onCloseHelp: () => void;
   onCloseNavigation: () => void;
   onNavigateSection: (id: string) => void;
   onOpenComments: () => void;
+  onOpenHelp: () => void;
   onOpenNavigation: () => void;
   onRenderComplete?: () => void;
   onSearch: (query: string) => void;
@@ -55,6 +60,7 @@ export function CheatBrowser({
   hasFilterQuery,
   isBrowserVisible,
   isCommentsOpen,
+  isHelpOpen,
   isInitialBuildLoading,
   isMobileOverlayOpen,
   isMobileSearchFocused,
@@ -64,9 +70,11 @@ export function CheatBrowser({
   normalizedFilterQuery,
   onClearSearch,
   onCloseComments,
+  onCloseHelp,
   onCloseNavigation,
   onNavigateSection,
   onOpenComments,
+  onOpenHelp,
   onOpenNavigation,
   onRenderComplete,
   onSearch,
@@ -90,6 +98,7 @@ export function CheatBrowser({
         isSearching={isSearchActive}
         onClearSearch={onClearSearch}
         onOpenComments={onOpenComments}
+        onOpenHelp={onOpenHelp}
         onOpenNavigation={onOpenNavigation}
         onSearchBlur={onSearchBlur}
         onSearchFocus={onSearchFocus}
@@ -137,7 +146,9 @@ export function CheatBrowser({
           onNavigate={onNavigateSection}
         />
       ) : null}
+      <HelpButton onClick={onOpenHelp} />
       <CommentsButton onClick={onOpenComments} />
+      <CheatUsageGuide isOpen={isHelpOpen} onClose={onCloseHelp} />
       <CommentsPanel isOpen={isCommentsOpen} onClose={onCloseComments} />
     </section>
   );

@@ -7,6 +7,7 @@ import { BuildLoadingOverlay } from "./components/BuildLoadingOverlay";
 import { BuildSelector } from "./components/BuildSelector";
 import { CheatBrowser } from "./components/CheatBrowser";
 import { RomDropOverlay } from "./components/RomDropOverlay";
+import { RomMismatchPanel } from "./components/RomMismatchPanel";
 import { Toast } from "./components/Toast";
 import { builds } from "./data/builds";
 import {
@@ -40,9 +41,11 @@ type NetworkInformationLike = {
 export function App({
   initialBuild = null,
   initialGroups = [],
+  showRootIntro = false,
 }: {
   initialBuild?: CheatBuildId | null;
   initialGroups?: CheatGroup[];
+  showRootIntro?: boolean;
 }) {
   const initialBuildRef = useRef<CheatBuildId | null>(null);
   const [selectedBuild, setSelectedBuild] = useState<CheatBuildId | null>(initialBuild);
@@ -53,6 +56,7 @@ export function App({
   const [warmedGroups, setWarmedGroups] = useState<CheatGroup[]>(initialBuild ? [] : initialGroups);
   const [isMobileOverlayOpen, setIsMobileOverlayOpen] = useState(false);
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isBuildPending, setIsBuildPending] = useState(false);
   const [isBuildLoading, setIsBuildLoading] = useState(false);
   const [buildLoadingLabel, setBuildLoadingLabel] = useState<string | null>(null);
@@ -60,6 +64,9 @@ export function App({
   const [isMobileSearchFocused, setIsMobileSearchFocused] = useState(false);
   const [isRomDragging, setIsRomDragging] = useState(false);
   const [romStatus, setRomStatus] = useState<string | null>(null);
+  const [romMismatchFileName, setRomMismatchFileName] = useState<string | null>(null);
+  const [romMismatchMd5, setRomMismatchMd5] = useState<string | null>(null);
+  const [isRomMismatchOpen, setIsRomMismatchOpen] = useState(false);
   const [searchLockScrollY, setSearchLockScrollY] = useState<number | null>(null);
   const [toolbarHeight, setToolbarHeight] = useState(0);
   const buildLoadTokenRef = useRef(0);
@@ -192,7 +199,10 @@ export function App({
     };
   }, [isMobileSearchFocused, isSearchActive]);
 
-  useBodyScrollLock(isSearchActive, searchLockScrollY);
+  useBodyScrollLock(
+    isSearchActive || isCommentsOpen || isHelpOpen || isRomMismatchOpen,
+    isSearchActive ? searchLockScrollY : null,
+  );
 
   useEffect(() => {
     return () => {
@@ -266,6 +276,10 @@ export function App({
   }, []);
 
   function selectBuild(buildId: CheatBuildId) {
+    setRomMismatchFileName(null);
+    setRomMismatchMd5(null);
+    setIsRomMismatchOpen(false);
+
     if (selectedBuild === buildId) {
       const target = getBuildRoute(buildId);
       if (window.location.pathname !== target) {
@@ -330,6 +344,15 @@ export function App({
   }
 
   async function selectBuildFromRomFile(file: File) {
+    setRomMismatchFileName(null);
+    setRomMismatchMd5(null);
+    setIsRomMismatchOpen(false);
+
+    if (!file.name.toLowerCase().endsWith(".gba")) {
+      setRomStatus("압축을 푼 .gba 파일을 선택하세요. .zip이나 패치 파일은 확인할 수 없습니다.");
+      return;
+    }
+
     setRomStatus("ROM 확인 중...");
 
     try {
@@ -337,12 +360,15 @@ export function App({
       const result = await detectRomBuild(file, builds);
 
       if (!result.matched) {
-        setRomStatus(`지원하지 않는 ROM입니다. MD5: ${result.md5}`);
+        setRomStatus(null);
+        setRomMismatchFileName(file.name);
+        setRomMismatchMd5(result.md5);
+        setIsRomMismatchOpen(true);
         return;
       }
 
       selectBuild(result.build.id);
-      setRomStatus(`${result.build.label}로 선택됨`);
+      setRomStatus(`${result.build.label}로 확인됨`);
     } catch {
       setRomStatus("ROM 파일을 읽지 못했습니다.");
     }
@@ -447,9 +473,12 @@ export function App({
       <AppHeader
         build={build}
         builds={builds}
+        description={showRootIntro && !build ? "영문판 및 한글패치 버전에 맞는 치트를 선택하세요." : undefined}
         isBuildLoading={isBuildPending}
         onSelectBuild={selectBuild}
         onSelectRomFile={(file) => void selectBuildFromRomFile(file)}
+        romMismatchFileName={romMismatchFileName}
+        romMismatchMd5={romMismatchMd5}
         romStatus={romStatus}
       />
 
@@ -469,6 +498,7 @@ export function App({
           hasFilterQuery={hasFilterQuery}
           isBrowserVisible={isBrowserVisible}
           isCommentsOpen={isCommentsOpen}
+          isHelpOpen={isHelpOpen}
           isInitialBuildLoading={isInitialBuildLoading}
           isMobileOverlayOpen={isMobileOverlayOpen}
           isMobileSearchFocused={isMobileSearchFocused}
@@ -478,9 +508,17 @@ export function App({
           normalizedFilterQuery={normalizedFilterQuery}
           onClearSearch={resetSearch}
           onCloseComments={() => setIsCommentsOpen(false)}
+          onCloseHelp={() => setIsHelpOpen(false)}
           onCloseNavigation={() => setIsMobileOverlayOpen(false)}
           onNavigateSection={navigateToSection}
-          onOpenComments={() => setIsCommentsOpen(true)}
+          onOpenComments={() => {
+            setIsHelpOpen(false);
+            setIsCommentsOpen(true);
+          }}
+          onOpenHelp={() => {
+            setIsCommentsOpen(false);
+            setIsHelpOpen(true);
+          }}
           onOpenNavigation={() => setIsMobileOverlayOpen(true)}
           onRenderComplete={handleBuildRenderComplete}
           onSearch={handleSearchSubmit}
@@ -504,6 +542,7 @@ export function App({
         />
       ) : null}
       <RomDropOverlay isActive={isRomDragging} />
+      <RomMismatchPanel md5={isRomMismatchOpen ? romMismatchMd5 : null} onClose={() => setIsRomMismatchOpen(false)} />
       <BuildLoadingOverlay isActive={isBuildLoading} label={buildLoadingLabel} />
       <Toast />
     </main>
