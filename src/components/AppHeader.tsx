@@ -3,7 +3,6 @@ import type { CheatBuild, CheatBuildId } from "../types/cheat";
 type AppHeaderProps = {
   build: CheatBuild | null;
   builds: CheatBuild[];
-  description?: string;
   isBuildLoading: boolean;
   onSelectBuild: (buildId: CheatBuildId) => void;
   onSelectRomFile: (file: File) => void;
@@ -15,7 +14,6 @@ type AppHeaderProps = {
 export function AppHeader({
   build,
   builds,
-  description,
   isBuildLoading,
   onSelectBuild,
   onSelectRomFile,
@@ -31,7 +29,6 @@ export function AppHeader({
     <header className="app-header">
       <div>
         <h1>포켓몬스터 에메랄드 치트</h1>
-        {description ? <p data-root-intro="true">{description}</p> : null}
       </div>
       <div className="build-tools">
         {build ? (

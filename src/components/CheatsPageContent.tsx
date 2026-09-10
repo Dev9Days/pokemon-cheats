@@ -31,7 +31,11 @@ export async function CheatsPageContent({ showRootIntro = false }: { showRootInt
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-      <App initialGroups={initialGroups} showRootIntro={showRootIntro} />
+      <App
+        initialBuild={showRootIntro ? "kr-20260613" : null}
+        initialGroups={initialGroups}
+        showRootIntro={showRootIntro}
+      />
     </>
   );
 }

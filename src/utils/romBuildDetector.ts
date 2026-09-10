@@ -13,7 +13,17 @@ export type RomBuildDetectionResult =
     };
 
 export async function calculateFileMd5(file: File): Promise<string> {
-  return SparkMD5.ArrayBuffer.hash(await file.arrayBuffer()).toLowerCase();
+  const hash = new SparkMD5.ArrayBuffer();
+  const chunkSize = 2 * 1024 * 1024;
+  try {
+    // Yield between chunks so the checking indicator stays responsive.
+    for (let offset = 0; offset < file.size; offset += chunkSize) {
+      hash.append(await file.slice(offset, offset + chunkSize).arrayBuffer());
+    }
+    return hash.end().toLowerCase();
+  } finally {
+    hash.destroy();
+  }
 }
 
 export async function detectRomBuild(file: File, builds: CheatBuild[]): Promise<RomBuildDetectionResult> {

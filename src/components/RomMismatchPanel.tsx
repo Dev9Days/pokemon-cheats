@@ -30,23 +30,23 @@ export function RomMismatchPanel({ md5, onClose }: RomMismatchPanelProps) {
         <div className="rom-mismatch-panel__header">
           <div>
             <TriangleAlert size={18} />
-            <strong id="rom-mismatch-title">버전을 확인할 수 없습니다</strong>
+            <strong id="rom-mismatch-title">파일에 맞는 버전을 찾지 못했습니다</strong>
           </div>
           <button ref={closeButtonRef} type="button" onClick={onClose} aria-label="안내 닫기">
             <X size={18} />
           </button>
         </div>
         <div className="rom-mismatch-panel__content">
-          <p>선택한 .gba 파일의 MD5가 이 사이트에 등록된 버전과 일치하지 않습니다.</p>
+          <p>이 파일은 사이트에 등록된 어느 버전과도 일치하지 않습니다.</p>
           <div className="rom-mismatch-panel__md5">
-            <span>확인된 MD5</span>
+            <span>파일 MD5</span>
             <code>{md5}</code>
           </div>
           <div className="rom-mismatch-panel__checklist">
-            <strong>다음을 확인하세요.</strong>
+            <strong>이렇게 확인해 보세요</strong>
             <ul>
-              <li>에뮬레이터에서 실제로 실행하는 .gba 파일을 선택했나요?</li>
-              <li>한글판이라면 이 사이트에서 지원하는 한글패치를 사용했나요?</li>
+              <li>에뮬레이터에서 게임을 실행할 때 사용하는 .gba 파일을 선택해 주세요.</li>
+              <li>한글판은 아래에서 배포하는 한글패치를 적용한 버전만 지원합니다.</li>
             </ul>
           </div>
           <a
@@ -54,7 +54,7 @@ export function RomMismatchPanel({ md5, onClose }: RomMismatchPanelProps) {
             target="_blank"
             rel="noreferrer"
           >
-            지원 한글패치 받기
+            한글패치 배포 페이지 ↗
           </a>
         </div>
         <div className="rom-mismatch-panel__footer">

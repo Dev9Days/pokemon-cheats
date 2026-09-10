@@ -5,6 +5,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { AppHeader } from "./components/AppHeader";
 import { BuildLoadingOverlay } from "./components/BuildLoadingOverlay";
 import { BuildSelector } from "./components/BuildSelector";
+import { BuildSelectionDialog } from "./components/BuildSelectionDialog";
 import { CheatBrowser } from "./components/CheatBrowser";
 import { RomDropOverlay } from "./components/RomDropOverlay";
 import { RomMismatchPanel } from "./components/RomMismatchPanel";
@@ -57,12 +58,15 @@ export function App({
   const [isMobileOverlayOpen, setIsMobileOverlayOpen] = useState(false);
   const [isCommentsOpen, setIsCommentsOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const [isBuildSelectionOpen, setIsBuildSelectionOpen] = useState(false);
   const [isBuildPending, setIsBuildPending] = useState(false);
   const [isBuildLoading, setIsBuildLoading] = useState(false);
   const [buildLoadingLabel, setBuildLoadingLabel] = useState<string | null>(null);
   const [isInitialBuildLoading, setIsInitialBuildLoading] = useState(false);
   const [isMobileSearchFocused, setIsMobileSearchFocused] = useState(false);
   const [isRomDragging, setIsRomDragging] = useState(false);
+  const [isRomChecking, setIsRomChecking] = useState(false);
+  const romCheckInProgressRef = useRef(false);
   const [romStatus, setRomStatus] = useState<string | null>(null);
   const [romMismatchFileName, setRomMismatchFileName] = useState<string | null>(null);
   const [romMismatchMd5, setRomMismatchMd5] = useState<string | null>(null);
@@ -122,7 +126,7 @@ export function App({
   }, []);
 
   useEffect(() => {
-    if (initialBuild) {
+    if (initialBuild && !showRootIntro) {
       safeSetStoredBuild(initialBuild);
       return;
     }
@@ -131,7 +135,9 @@ export function App({
     const storedInitialBuild = initialBuildRef.current;
     initialBuildRef.current = null;
     if (storedInitialBuild) {
-      window.location.replace(getBuildRoute(storedInitialBuild));
+      window.location.replace(getBuildRoute(storedInitialBuild) + window.location.search + window.location.hash);
+    } else if (showRootIntro) {
+      setIsBuildSelectionOpen(true);
     }
   }, []);
 
@@ -200,7 +206,7 @@ export function App({
   }, [isMobileSearchFocused, isSearchActive]);
 
   useBodyScrollLock(
-    isSearchActive || isCommentsOpen || isHelpOpen || isRomMismatchOpen,
+    isSearchActive || isCommentsOpen || isHelpOpen || isRomMismatchOpen || isBuildSelectionOpen,
     isSearchActive ? searchLockScrollY : null,
   );
 
@@ -280,7 +286,9 @@ export function App({
     setRomMismatchMd5(null);
     setIsRomMismatchOpen(false);
 
-    if (selectedBuild === buildId) {
+    if (currentBuildIdRef.current === buildId) {
+      safeSetStoredBuild(buildId);
+      setIsBuildSelectionOpen(false);
       const target = getBuildRoute(buildId);
       if (window.location.pathname !== target) {
         window.history.replaceState(null, "", target);
@@ -321,6 +329,7 @@ export function App({
       pendingBuildRenderTokenRef.current = !options.showOverlay && nextGroups.length > 0 ? token : null;
       setGroups(nextGroups);
       setSelectedBuild(buildId);
+      setIsBuildSelectionOpen(false);
       if (options.persist) safeSetStoredBuild(buildId);
       if (window.location.pathname !== getBuildRoute(buildId)) {
         window.history.replaceState(null, "", getBuildRoute(buildId));
@@ -344,6 +353,7 @@ export function App({
   }
 
   async function selectBuildFromRomFile(file: File) {
+    if (romCheckInProgressRef.current) return;
     setRomMismatchFileName(null);
     setRomMismatchMd5(null);
     setIsRomMismatchOpen(false);
@@ -353,9 +363,12 @@ export function App({
       return;
     }
 
-    setRomStatus("ROM 확인 중...");
+    romCheckInProgressRef.current = true;
+    setIsRomChecking(true);
+    setRomStatus("버전 확인 중…");
 
     try {
+      await nextPaint();
       const { detectRomBuild } = await import("./utils/romBuildDetector");
       const result = await detectRomBuild(file, builds);
 
@@ -371,6 +384,11 @@ export function App({
       setRomStatus(`${result.build.label}로 확인됨`);
     } catch {
       setRomStatus("ROM 파일을 읽지 못했습니다.");
+    } finally {
+      romCheckInProgressRef.current = false;
+      setIsRomChecking(false);
+      dragDepthRef.current = 0;
+      setIsRomDragging(false);
     }
   }
 
@@ -473,7 +491,6 @@ export function App({
       <AppHeader
         build={build}
         builds={builds}
-        description={showRootIntro && !build ? "영문판 및 한글패치 버전에 맞는 치트를 선택하세요." : undefined}
         isBuildLoading={isBuildPending}
         onSelectBuild={selectBuild}
         onSelectRomFile={(file) => void selectBuildFromRomFile(file)}
@@ -541,7 +558,19 @@ export function App({
           toolbarRef={isBrowserVisible ? toolbarRef : warmToolbarRef}
         />
       ) : null}
-      <RomDropOverlay isActive={isRomDragging} />
+      {isBuildSelectionOpen ? (
+        <BuildSelectionDialog
+          builds={builds}
+          isSuspended={isRomMismatchOpen}
+          onClose={() => setIsBuildSelectionOpen(false)}
+          onSelectBuild={selectBuild}
+          onSelectRomFile={(file) => void selectBuildFromRomFile(file)}
+          romMismatchFileName={romMismatchFileName}
+          romMismatchMd5={romMismatchMd5}
+          romStatus={romStatus}
+        />
+      ) : null}
+      <RomDropOverlay isActive={isRomDragging || isRomChecking} isChecking={isRomChecking} />
       <RomMismatchPanel md5={isRomMismatchOpen ? romMismatchMd5 : null} onClose={() => setIsRomMismatchOpen(false)} />
       <BuildLoadingOverlay isActive={isBuildLoading} label={buildLoadingLabel} />
       <Toast />
