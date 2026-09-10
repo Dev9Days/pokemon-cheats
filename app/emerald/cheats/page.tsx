@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { CheatsPageContent } from "../../../src/components/CheatsPageContent";
+import { LegacyRootRedirect } from "../../../src/components/LegacyRootRedirect";
 
 export const metadata: Metadata = {
   alternates: {
@@ -12,5 +12,5 @@ export const metadata: Metadata = {
 };
 
 export default function CheatsPage() {
-  return <CheatsPageContent />;
+  return <LegacyRootRedirect />;
 }

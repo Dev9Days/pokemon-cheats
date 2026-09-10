@@ -210,6 +210,12 @@ button {
   border-radius: 12px;
 }
 
+.rom-drop-overlay.is-checking {
+  pointer-events: auto;
+  cursor: wait;
+  outline: none;
+}
+
 .rom-drop-overlay > div {
   display: grid;
   justify-items: center;
@@ -293,6 +299,28 @@ button {
   font-size: 13px;
   font-weight: 700;
   transform: translateX(-50%);
+}
+
+.toast--with-hint {
+  width: min(360px, calc(100% - 40px));
+  align-items: flex-start;
+  padding: 12px 14px;
+  border-radius: 12px;
+}
+
+.toast--with-hint .toast__icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.toast__description {
+  display: block;
+  margin-top: 4px;
+  color: #e2e8f0;
+  font-weight: 400;
+  line-height: 1.5;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
 }
 
 .toast__icon--success {

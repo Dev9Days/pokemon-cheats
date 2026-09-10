@@ -1,5 +1,12 @@
 export const earlyBuildNavigationScript = `
 (() => {
+  const legacyEntryPaths = new Set(["/emerald/cheats", "/emerald/cheats/", "/pokemon-cheats", "/pokemon-cheats/"]);
+  if (legacyEntryPaths.has(window.location.pathname)) {
+    // Preserve shared section links and query parameters before the meta refresh.
+    window.location.replace("/" + window.location.search + window.location.hash);
+    return;
+  }
+
   const key = "emerald:selected-build";
   const legacyKey = "pokemon-emerald-cheats:selected-build";
   const hydratedKey = "__pokemonEmeraldCheatsHydrated";
@@ -85,11 +92,7 @@ export const earlyBuildNavigationScript = `
       const build = getStoredBuild();
       if (build && allowed.has(build)) {
         const target = getBuildRoute(build) + window.location.search + window.location.hash;
-        if (
-          window.location.pathname === "/" ||
-          window.location.pathname === "/emerald/cheats/" ||
-          window.location.pathname === "/emerald/cheats"
-        ) {
+        if (window.location.pathname === "/") {
           window.location.replace(target);
           return true;
         }

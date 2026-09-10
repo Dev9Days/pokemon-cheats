@@ -1,6 +1,7 @@
 import { Search } from "lucide-react";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import type { CheatEntry, CheatVariant } from "../types/cheat";
+import { getCheatActivationHint } from "../utils/cheatActivationHint";
 import { CopyButton } from "./CopyButton";
 
 const VARIANT_FILTER_THRESHOLD = 20;
@@ -38,11 +39,13 @@ type CheatCardProps = {
 const VariantRow = memo(function VariantRow({
   copyCacheKey,
   entryId,
+  parentBadges,
   getVariantCodeText,
   variant,
 }: {
   copyCacheKey?: string;
   entryId: string;
+  parentBadges?: CheatEntry["badges"];
   getVariantCodeText: (entryId: string, variantId: string) => Promise<string> | string;
   variant: CheatVariant;
 }) {
@@ -61,6 +64,7 @@ const VariantRow = memo(function VariantRow({
       <CopyButton
         cacheKey={copyCacheKey}
         label={variant.title}
+        successDescription={getCheatActivationHint(variant.badges, parentBadges)}
         getText={() => getVariantCodeText(entryId, variant.id)}
       />
     </div>
@@ -146,6 +150,7 @@ export const CheatCard = memo(function CheatCard({
           <CopyButton
             cacheKey={copyCacheKey}
             label={cheat.title}
+            successDescription={getCheatActivationHint(cheat.badges)}
             getText={() => getEntryCodeText(cheat.id)}
           />
         ) : null}
@@ -176,6 +181,7 @@ export const CheatCard = memo(function CheatCard({
                 key={variant.id}
                 copyCacheKey={copyCacheKey}
                 entryId={cheat.id}
+                parentBadges={cheat.badges}
                 getVariantCodeText={getVariantCodeText}
                 variant={variant}
               />

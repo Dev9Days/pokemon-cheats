@@ -1,5 +1,5 @@
 import { Check, Copy } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { showToast } from "../utils/toast";
 
 const COPY_BUSY_INDICATOR_DELAY_MS = 120;
@@ -29,12 +29,14 @@ function copyTextWithTextArea(text: string) {
   }
 }
 
-async function copyText(text: string) {
+async function copyText(text: string, isCurrent: () => boolean) {
+  if (!isCurrent()) return;
   if (navigator.clipboard?.writeText && window.isSecureContext) {
     try {
       await navigator.clipboard.writeText(text);
       return;
     } catch {
+      if (!isCurrent()) return;
       copyTextWithTextArea(text);
       return;
     }
@@ -47,25 +49,34 @@ type CopyButtonProps = {
   cacheKey?: string;
   getText?: () => Promise<string> | string;
   label: string;
+  successDescription?: string;
   text?: string;
 };
 
-export function CopyButton({ cacheKey, getText, label, text = "" }: CopyButtonProps) {
+export function CopyButton({ cacheKey, getText, label, successDescription, text = "" }: CopyButtonProps) {
   const [copied, setCopied] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
   const pendingTextRef = useRef<Promise<string> | null>(null);
   const copyInFlightRef = useRef(false);
   const busyIndicatorTimerRef = useRef<number | null>(null);
+  const copiedTimerRef = useRef<number | null>(null);
+  const generationRef = useRef(0);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
+    generationRef.current += 1;
     pendingTextRef.current = null;
-  }, [cacheKey]);
+    copyInFlightRef.current = false;
+    setCopied(false);
+    setIsRetrying(false);
 
-  useEffect(() => {
     return () => {
+      generationRef.current += 1;
       if (busyIndicatorTimerRef.current !== null) window.clearTimeout(busyIndicatorTimerRef.current);
+      if (copiedTimerRef.current !== null) window.clearTimeout(copiedTimerRef.current);
+      busyIndicatorTimerRef.current = null;
+      copiedTimerRef.current = null;
     };
-  }, []);
+  }, [cacheKey]);
 
   function waitForRetryDelay() {
     return new Promise<void>((resolve) => {
@@ -103,43 +114,57 @@ export function CopyButton({ cacheKey, getText, label, text = "" }: CopyButtonPr
   function loadText() {
     if (!getText) return Promise.resolve(text);
 
-    pendingTextRef.current ??= Promise.resolve(getText()).catch((error) => {
-      pendingTextRef.current = null;
-      throw error;
-    });
+    if (!pendingTextRef.current) {
+      const pending = Promise.resolve().then(() => getText()).catch((error) => {
+        if (pendingTextRef.current === pending) pendingTextRef.current = null;
+        throw error;
+      });
+      pendingTextRef.current = pending;
+    }
     return pendingTextRef.current;
   }
 
   function prefetchText() {
-    void loadText();
+    void loadText().catch(() => {});
   }
 
   async function copyCode() {
     if (copyInFlightRef.current) return;
 
     copyInFlightRef.current = true;
+    const generation = generationRef.current;
+    const isCurrent = () => generation === generationRef.current;
+    if (copiedTimerRef.current !== null) window.clearTimeout(copiedTimerRef.current);
     scheduleBusyIndicator();
 
     try {
       const nextText = await loadText();
+      if (!isCurrent()) return;
       try {
-        await copyText(nextText);
+        await copyText(nextText, isCurrent);
       } catch {
+        if (!isCurrent()) return;
         showBusyIndicatorNow();
         await waitForRetryDelay();
-        await copyText(nextText);
+        if (!isCurrent()) return;
+        await copyText(nextText, isCurrent);
       }
 
+      if (!isCurrent()) return;
       stopBusyIndicator();
       setCopied(true);
-      showToast({ message: "복사 완료", variant: "success" });
-      window.setTimeout(() => setCopied(false), 1800);
+      showToast({ message: "복사 완료", description: successDescription, variant: "success" });
+      copiedTimerRef.current = window.setTimeout(() => {
+        copiedTimerRef.current = null;
+        if (isCurrent()) setCopied(false);
+      }, 1800);
     } catch {
+      if (!isCurrent()) return;
       stopBusyIndicator();
       setCopied(false);
       showToast({ message: "복사 실패", variant: "error" });
     } finally {
-      copyInFlightRef.current = false;
+      if (isCurrent()) copyInFlightRef.current = false;
     }
   }
 

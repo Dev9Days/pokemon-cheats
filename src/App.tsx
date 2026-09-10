@@ -30,6 +30,7 @@ import {
 } from "./utils/buildSelection";
 import { filterGroups, getSectionNavItems } from "./utils/cheats";
 import { installCloudflareAnalytics } from "./utils/cloudflareAnalytics";
+import { showToast } from "./utils/toast";
 
 const BUILD_LOADING_OVERLAY_DELAY_MS = 150;
 const SEARCH_RESULTS_CLEANUP_DELAY_MS = 180;
@@ -206,7 +207,7 @@ export function App({
   }, [isMobileSearchFocused, isSearchActive]);
 
   useBodyScrollLock(
-    isSearchActive || isCommentsOpen || isHelpOpen || isRomMismatchOpen || isBuildSelectionOpen,
+    isSearchActive || isCommentsOpen || isHelpOpen || isRomMismatchOpen || isBuildSelectionOpen || isRomChecking,
     isSearchActive ? searchLockScrollY : null,
   );
 
@@ -282,11 +283,13 @@ export function App({
   }, []);
 
   function selectBuild(buildId: CheatBuildId) {
+    if (romCheckInProgressRef.current) return;
     setRomMismatchFileName(null);
     setRomMismatchMd5(null);
     setIsRomMismatchOpen(false);
 
     if (currentBuildIdRef.current === buildId) {
+      cancelPendingBuild();
       safeSetStoredBuild(buildId);
       setIsBuildSelectionOpen(false);
       const target = getBuildRoute(buildId);
@@ -297,6 +300,14 @@ export function App({
     }
 
     void loadBuild(buildId, { persist: true, resetView: true, showOverlay: true, immediateOverlay: !selectedBuild });
+  }
+
+  function cancelPendingBuild() {
+    buildLoadTokenRef.current += 1;
+    pendingBuildRenderTokenRef.current = null;
+    setIsBuildPending(false);
+    setIsInitialBuildLoading(false);
+    stopBuildLoading();
   }
 
   async function loadBuild(
@@ -353,7 +364,10 @@ export function App({
   }
 
   async function selectBuildFromRomFile(file: File) {
-    if (romCheckInProgressRef.current) return;
+    if (romCheckInProgressRef.current) {
+      showToast({ message: "파일을 확인 중입니다. 완료된 뒤 다시 넣어 주세요.", variant: "error" });
+      return;
+    }
     setRomMismatchFileName(null);
     setRomMismatchMd5(null);
     setIsRomMismatchOpen(false);
@@ -364,6 +378,7 @@ export function App({
     }
 
     romCheckInProgressRef.current = true;
+    cancelPendingBuild();
     setIsRomChecking(true);
     setRomStatus("버전 확인 중…");
 
@@ -380,6 +395,7 @@ export function App({
         return;
       }
 
+      romCheckInProgressRef.current = false;
       selectBuild(result.build.id);
       setRomStatus(`${result.build.label}로 확인됨`);
     } catch {
@@ -488,6 +504,7 @@ export function App({
 
   return (
     <main className="app-shell" style={{ "--toolbar-height": `${toolbarHeight}px` } as CSSProperties}>
+      <div inert={isRomChecking}>
       <AppHeader
         build={build}
         builds={builds}
@@ -561,8 +578,7 @@ export function App({
       {isBuildSelectionOpen ? (
         <BuildSelectionDialog
           builds={builds}
-          isSuspended={isRomMismatchOpen}
-          onClose={() => setIsBuildSelectionOpen(false)}
+          isSuspended={isRomMismatchOpen || isRomChecking}
           onSelectBuild={selectBuild}
           onSelectRomFile={(file) => void selectBuildFromRomFile(file)}
           romMismatchFileName={romMismatchFileName}
@@ -570,6 +586,7 @@ export function App({
           romStatus={romStatus}
         />
       ) : null}
+      </div>
       <RomDropOverlay isActive={isRomDragging || isRomChecking} isChecking={isRomChecking} />
       <RomMismatchPanel md5={isRomMismatchOpen ? romMismatchMd5 : null} onClose={() => setIsRomMismatchOpen(false)} />
       <BuildLoadingOverlay isActive={isBuildLoading} label={buildLoadingLabel} />
