@@ -2,6 +2,7 @@ export type ToastVariant = "success" | "error";
 
 export type ToastPayload = {
   message: string;
+  description?: string;
   variant: ToastVariant;
 };
 

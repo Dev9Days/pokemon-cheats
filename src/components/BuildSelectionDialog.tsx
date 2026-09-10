@@ -1,4 +1,3 @@
-import { X } from "lucide-react";
 import { useEffect, useRef } from "react";
 import type { CheatBuild, CheatBuildId } from "../types/cheat";
 import { BuildSelector } from "./BuildSelector";
@@ -6,7 +5,6 @@ import { BuildSelector } from "./BuildSelector";
 type BuildSelectionDialogProps = {
   builds: CheatBuild[];
   isSuspended: boolean;
-  onClose: () => void;
   onSelectBuild: (buildId: CheatBuildId) => void;
   onSelectRomFile: (file: File) => void;
   romMismatchFileName: string | null;
@@ -17,7 +15,6 @@ type BuildSelectionDialogProps = {
 export function BuildSelectionDialog({
   builds,
   isSuspended,
-  onClose,
   onSelectBuild,
   onSelectRomFile,
   romMismatchFileName,
@@ -25,8 +22,6 @@ export function BuildSelectionDialog({
   romStatus,
 }: BuildSelectionDialogProps) {
   const dialogRef = useRef<HTMLDivElement>(null);
-  const closeRef = useRef(onClose);
-  closeRef.current = onClose;
 
   useEffect(() => {
     if (isSuspended) return;
@@ -38,7 +33,6 @@ export function BuildSelectionDialog({
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
         event.preventDefault();
-        closeRef.current();
       }
       if (event.key !== "Tab" || !dialog) return;
       const controls = Array.from(dialog.querySelectorAll<HTMLElement>(
@@ -64,7 +58,7 @@ export function BuildSelectionDialog({
 
   return (
     <div className="build-selection-dialog">
-      <div className="guide-panel__backdrop" onClick={onClose} />
+      <div className="guide-panel__backdrop" />
       <div
         className="guide-panel__body build-selection-dialog__body"
         ref={dialogRef}
@@ -75,9 +69,6 @@ export function BuildSelectionDialog({
       >
         <div className="guide-panel__header">
           <strong id="build-selection-title">사용 중인 게임 버전을 선택하세요</strong>
-          <button type="button" onClick={onClose} aria-label="버전 선택 닫기">
-            <X size={18} />
-          </button>
         </div>
         <div className="build-selection-dialog__content">
           <label className="rom-file-picker">

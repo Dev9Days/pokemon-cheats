@@ -4,6 +4,7 @@ import { TOAST_EVENT_NAME } from "../utils/toast";
 import type { ToastPayload } from "../utils/toast";
 
 const TOAST_DURATION_MS = 1800;
+const TOAST_WITH_HINT_DURATION_MS = 6000;
 
 export function Toast() {
   const [toast, setToast] = useState<ToastPayload | null>(null);
@@ -23,7 +24,7 @@ export function Toast() {
       timerRef.current = window.setTimeout(() => {
         timerRef.current = null;
         setToast(null);
-      }, TOAST_DURATION_MS);
+      }, toastEvent.detail.description ? TOAST_WITH_HINT_DURATION_MS : TOAST_DURATION_MS);
     }
 
     window.addEventListener(TOAST_EVENT_NAME, handleToast);
@@ -39,11 +40,14 @@ export function Toast() {
   const Icon = toast.variant === "success" ? Check : X;
 
   return (
-    <div className="toast" role="status" aria-live="polite">
+    <div className={`toast${toast.description ? " toast--with-hint" : ""}`} role="status" aria-live="polite" aria-atomic="true">
       <span className={`toast__icon toast__icon--${toast.variant}`} aria-hidden="true">
         <Icon size={16} strokeWidth={3} />
       </span>
-      <span>{toast.message}</span>
+      <span>
+        <span>{toast.message}</span>
+        {toast.description ? <span className="toast__description">{toast.description}</span> : null}
+      </span>
     </div>
   );
 }

@@ -143,7 +143,19 @@ for (const generatedUrl of generatedVersionUrls) {
   assertAliasIsNoindex(new URL(generatedUrl).pathname);
 }
 
-assertAliasIsNoindex("/emerald/cheats/");
-assertAliasIsNoindex("/pokemon-cheats/");
+for (const pathname of ["/emerald/cheats/", "/pokemon-cheats/"]) {
+  assertAliasIsNoindex(pathname);
+  const { filePath, html } = readOutput(pathname);
+  const tags = getSeoTags(html, filePath);
+  if (!tags.some(({ tag, attributes }) => tag === "meta"
+    && attributes["http-equiv"]?.toLowerCase() === "refresh"
+    && attributes.content === "0;url=/")) {
+    fail(`${filePath} must redirect immediately to the root`);
+  }
+  if (html.includes('class="build-selector"') || html.includes('class="browser-shell')) {
+    fail(`${filePath} must not render the old entry screen`);
+  }
+  if (!html.includes('<a href="/">')) fail(`${filePath} must provide a fallback root link`);
+}
 
 console.log(`SEO validation passed for ${sitemapUrls.length} indexable URL.`);

@@ -27,7 +27,10 @@ const codeValueCache = new Map<CheatBuildId, CheatCodeValues | null>();
 let cheatStructurePromise: Promise<CheatGroup[]> | null = null;
 
 export function preloadCheatStructure(): Promise<CheatGroup[]> {
-  cheatStructurePromise ??= cheatStructureLoader();
+  cheatStructurePromise ??= cheatStructureLoader().catch((error) => {
+    cheatStructurePromise = null;
+    throw error;
+  });
   return cheatStructurePromise;
 }
 

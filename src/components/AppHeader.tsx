@@ -44,9 +44,7 @@ export function AppHeader({
             <select
               data-build-select="true"
               value={build.id}
-              onBlur={(event) => handleBuildChange(event.currentTarget.value)}
               onChange={(event) => handleBuildChange(event.currentTarget.value)}
-              onInput={(event) => handleBuildChange(event.currentTarget.value)}
             >
               {builds.map((item) => (
                 <option key={item.id} value={item.id}>

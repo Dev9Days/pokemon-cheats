@@ -1,4 +1,5 @@
 import { FileDown, LoaderCircle } from "lucide-react";
+import { useEffect, useRef } from "react";
 
 type RomDropOverlayProps = {
   isActive: boolean;
@@ -6,10 +7,31 @@ type RomDropOverlayProps = {
 };
 
 export function RomDropOverlay({ isActive, isChecking }: RomDropOverlayProps) {
+  const overlayRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!isActive || !isChecking) return;
+    const previousFocus = document.activeElement as HTMLElement | null;
+    overlayRef.current?.focus({ preventScroll: true });
+    return () => {
+      if (previousFocus?.isConnected && !previousFocus.closest("[inert]")) {
+        previousFocus.focus({ preventScroll: true });
+      }
+    };
+  }, [isActive, isChecking]);
+
   if (!isActive) return null;
 
   return (
-    <div className="rom-drop-overlay" role="status" aria-live="polite">
+    <div
+      ref={overlayRef}
+      className={`rom-drop-overlay${isChecking ? " is-checking" : ""}`}
+      role="status"
+      aria-live="polite"
+      tabIndex={-1}
+      onKeyDown={(event) => {
+        if (isChecking && event.key === "Tab") event.preventDefault();
+      }}
+    >
       <div>
         {isChecking ? (
           <LoaderCircle className="rom-drop-overlay__spinner" size={44} strokeWidth={1.5} aria-hidden="true" />
